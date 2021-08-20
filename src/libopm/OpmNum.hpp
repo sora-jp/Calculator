@@ -142,6 +142,8 @@ OpmNum parse(const char* str);
 enum class FormatMode { Standard, Scientific, DebugRaw, Full };
 int format(const OpmNum& num, char* buffer, FormatMode mode);
 
+OpmNum rand(OpmNum min, OpmNum max);
+
 inline void print(const OpmNum& num)
 {
 	char str[256];
@@ -149,3 +151,5 @@ inline void print(const OpmNum& num)
 	format(num, str, FormatMode::Scientific);
 	std::cout << str << std::endl;
 }
+
+#include "OpmStrConstant.hpp"

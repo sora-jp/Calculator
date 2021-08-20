@@ -9,6 +9,8 @@
 #include <StackBindings.hpp>
 
 #include "PrecisionTest.h"
+#include "OpmRand.hpp"
+#include "Timing.h"
 
 #define TIMER_BEGIN(timer) auto _##timer##_1 = std::chrono::steady_clock::now()
 #define TIMER_END(timer) auto _##timer##_2 = std::chrono::steady_clock::now()
@@ -37,12 +39,6 @@ std::map<std::string, void(*)(OpmStack<10>&)> cfnMap =
 	CALC_FN("tan",   stack.Push(tan(stack.Pop()).roundToNearest()))
 };
 
-template<OpmNum(*Fn)(const OpmNum& num)>
-void Handle(OpmStack<10>& stack)
-{
-	stack.Push(Fn(stack.Pop()));
-}
-
 int main(int argc, char** argv)
 {
 	if (argc > 1)
@@ -52,6 +48,11 @@ int main(int argc, char** argv)
 		if (exit) return res;
 	}
 
+	std::cout << "Ln(x)  took   " << Time(ln, 1e0_opm, 1e100_opm).count() << "ms" << std::endl;
+	std::cout << "Exp(x) took   " << Time(exp, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
+	std::cout << "Inv(x) took   " << Time(invert, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
+	
+	return 0;
 
 	//OpmNum num;
 	//std::string ss;
@@ -80,8 +81,6 @@ int main(int argc, char** argv)
 	OpmStack<10> stack;
 	while (true)
 	{
-		Handle<sin>(stack);
-		
 		std::string ns;
 		std::cin >> ns;
 		
