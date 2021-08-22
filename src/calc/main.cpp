@@ -8,6 +8,7 @@
 #include "OpmNum.hpp"
 #include <StackBindings.hpp>
 
+#include "Expressions.h"
 #include "PrecisionTest.h"
 #include "OpmRand.hpp"
 #include "Timing.h"
@@ -48,9 +49,25 @@ int main(int argc, char** argv)
 		if (exit) return res;
 	}
 
-	std::cout << "Ln(x)  took   " << Time(ln, 1e0_opm, 1e100_opm).count() << "ms" << std::endl;
-	std::cout << "Exp(x) took   " << Time(exp, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
-	std::cout << "Inv(x) took   " << Time(invert, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
+	ExpressionParser parser;
+	parser.RegisterFn("ln", ln);
+	parser.RegisterFn("exp", exp);
+	parser.RegisterFn("pow", pow);
+	parser.RegisterFn("sin", sin);
+	parser.RegisterFn("cos", cos);
+	parser.RegisterFn("tan", tan);
+
+	const auto expr = parser.Parse("5 - pow(2, 3) * 2 + 85.12378923");
+	const auto res = expr();
+
+	char str[256];
+	memset(str, 0, 256);
+	format(res, str, FormatMode::Standard);
+	std::cout << str << std::endl;
+	
+	//std::cout << "Ln(x)  took   " << Time(ln, 1e0_opm, 1e100_opm).count() << "ms" << std::endl;
+	//std::cout << "Exp(x) took   " << Time(exp, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
+	//std::cout << "Inv(x) took   " << Time(invert, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
 	
 	return 0;
 
