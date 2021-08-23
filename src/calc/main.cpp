@@ -8,7 +8,7 @@
 #include "OpmNum.hpp"
 #include <StackBindings.hpp>
 
-#include "Expressions.h"
+#include "Expressions.hpp"
 #include "PrecisionTest.h"
 #include "OpmRand.hpp"
 #include "Timing.h"
@@ -57,8 +57,11 @@ int main(int argc, char** argv)
 	parser.RegisterFn("cos", cos);
 	parser.RegisterFn("tan", tan);
 
-	const auto expr = parser.Parse("5 - pow(2, 3) * 2 + 85.12378923");
-	const auto res = expr();
+	const auto expr = parser.Parse("-x * 2");
+	auto ctx = ExpressionContext();
+	ctx.set(1.414e0_opm, "x");
+	
+	const auto res = expr(ctx);
 
 	char str[256];
 	memset(str, 0, 256);

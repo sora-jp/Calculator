@@ -1,9 +1,9 @@
-#include "Expressions.h"
+#include "Expressions.hpp"
 #include <cassert>
 
 enum class TokenType : uint8_t
 {
-	Invalid, LParen, RParen, Operator, Function, Comma, Number
+	Invalid, LParen, RParen, Operator, Identifier, Comma, Number
 };
 
 struct Token
@@ -14,7 +14,7 @@ struct Token
 
 bool isop(const char c)
 {
-	return c == '+' || c == '-' || c == '*' || c == '/';
+	return c == '+' || c == '-' || c == '*' || c == '/' || c == '^';
 }
 
 void Tokenize(const std::string& str, std::vector<Token>& outTokens)
@@ -25,7 +25,7 @@ void Tokenize(const std::string& str, std::vector<Token>& outTokens)
 	{
 		if (std::isblank(c)) continue;
 
-		if (curToken.type == TokenType::Function)
+		if (curToken.type == TokenType::Identifier)
 		{
 			if (!std::isalpha(c) && !std::isdigit(c))
 			{
@@ -49,13 +49,18 @@ void Tokenize(const std::string& str, std::vector<Token>& outTokens)
 
 		if (curToken.type == TokenType::Invalid)
 		{
-			if      (isop(c))  outTokens.push_back({TokenType::Operator, std::string() + c});
+			if (isop(c)) 
+			{
+				auto opTok = Token { TokenType::Operator, std::string() + c };
+				if (opTok.text == "-" && (outTokens.empty() || (outTokens.back().type != TokenType::Number && outTokens.back().type != TokenType::RParen))) opTok.text = "-u";
+				outTokens.push_back(opTok);
+			}
 			else if (c == '(') outTokens.push_back({TokenType::LParen  , ""});
 			else if (c == ')') outTokens.push_back({TokenType::RParen  , ""});
 			else if (c == ',') outTokens.push_back({TokenType::Comma   , ""});
 			else if (std::isalpha(c)) 
 			{
-				curToken.type = TokenType::Function;
+				curToken.type = TokenType::Identifier;
 				curToken.text += c;
 			}
 			else if (std::isdigit(c) || c == '.')
@@ -78,7 +83,7 @@ const char* GetText(const TokenType type)
 	case TokenType::LParen: return "LParen";
 	case TokenType::RParen: return "RParen";
 	case TokenType::Operator: return "Operator";
-	case TokenType::Function: return "Function";
+	case TokenType::Identifier: return "Identifier";
 	case TokenType::Comma: return "Comma";
 	case TokenType::Number: return "Number";
 	default: return "WTF";
@@ -95,6 +100,8 @@ void LogTokens(const std::vector<Token>& tokens)
 
 int GetPrecedence(const std::string& op)
 {
+	if (op == "^") return 4;
+	if (op == "-u") return 4;
 	if (op == "*" || op == "/") return 2;
 	if (op == "+" || op == "-") return 1;
 	return 0;
@@ -103,29 +110,33 @@ int GetPrecedence(const std::string& op)
 bool IsLAssoc(const std::string& op)
 {
 	if (op == "+" || op == "-") return true;
+	if (op == "*" || op == "/") return true;
 	return false;
 }
 
 OpmNum sub(const OpmNum& a, const OpmNum& b) { return a - b; }
 OpmNum neg(const OpmNum& a) { return -a; }
 
-Operation ExpressionParser::ToOp(const Token& token, bool unary) const
+Operation ExpressionParser::ToOp(const Token& token) const
 {
 	if (token.type == TokenType::Number)
 	{
 		return Operation(parse(token.text.c_str()), token.text);
 	}
-	if (token.type == TokenType::Function)
+	if (token.type == TokenType::Identifier)
 	{
 		if (m_unaryFns.count(token.text) != 0) return Operation(m_unaryFns.at(token.text), token.text);
 		if (m_binaryFns.count(token.text) != 0) return Operation(m_binaryFns.at(token.text), token.text);
+		return Operation(token.text, token.text);
 	}
 	if (token.type == TokenType::Operator)
 	{
-		if (token.text == "+") return Operation(operator+, token.text);
-		if (token.text == "-") return unary ? Operation(neg, token.text) : Operation(sub, token.text);
-		if (token.text == "*") return Operation(operator*, token.text);
-		if (token.text == "/") return Operation(operator/, token.text);
+		if (token.text == "+")  return Operation(operator+, token.text);
+		if (token.text == "-")  return Operation(sub,       token.text);
+		if (token.text == "-u") return Operation(neg,       token.text);
+		if (token.text == "*")  return Operation(operator*, token.text);
+		if (token.text == "/")  return Operation(operator/, token.text);
+		if (token.text == "^")  return Operation(pow,		token.text);
 	}
 
 	assert(false);
@@ -173,13 +184,17 @@ Expression ExpressionParser::Parse(const std::string& string) const
 	Expression out;
 	std::vector<Token> tokens;
 	Tokenize(string, tokens);
-	LogTokens(tokens);
+	//LogTokens(tokens);
 	std::vector<Token> opStack;
 
 	for (auto& token : tokens)
-	{
+	{		
 		if (token.type == TokenType::Number) out.PushOp(ToOp(token));
-		if (token.type == TokenType::Function) opStack.push_back(token);
+		if (token.type == TokenType::Identifier) 
+		{
+			if (IsFn(token.text)) opStack.push_back(token);
+			else out.PushOp(ToOp(token));
+		}
 		if (token.type == TokenType::Operator)
 		{
 			while (!opStack.empty() && opStack.back().type == TokenType::Operator && 
@@ -196,7 +211,7 @@ Expression ExpressionParser::Parse(const std::string& string) const
 		{
 			opStack.push_back(token);
 		}
-		if (token.type == TokenType::RParen)
+		if (token.type == TokenType::RParen || token.type == TokenType::Comma)
 		{
 			while (opStack.back().type != TokenType::LParen)
 			{
@@ -204,8 +219,8 @@ Expression ExpressionParser::Parse(const std::string& string) const
 				opStack.pop_back();
 			}
 			assert(opStack.back().type == TokenType::LParen);
-			opStack.pop_back();
-			if (opStack.back().type == TokenType::Function)
+			if (token.type != TokenType::Comma) opStack.pop_back();
+			if (opStack.back().type == TokenType::Identifier || (opStack.back().type == TokenType::Operator && opStack.back().text == "-u"))
 			{
 				out.PushOp(ToOp(opStack.back()));
 				opStack.pop_back();
@@ -219,7 +234,7 @@ Expression ExpressionParser::Parse(const std::string& string) const
 		opStack.pop_back();
 	}
 
-	out.Print();
+	//out.Print();
 
 	return out;
 }
