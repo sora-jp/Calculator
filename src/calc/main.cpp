@@ -42,32 +42,33 @@ std::map<std::string, void(*)(OpmStack<10>&)> cfnMap =
 
 int main(int argc, char** argv)
 {
-	if (argc > 1)
-	{
-		bool exit;
-		const auto res = TestPrecision(argc, argv, exit);
-		if (exit) return res;
-	}
+	//if (argc > 1)
+	//{
+	//	bool exit;
+	//	const auto res = TestPrecision(argc, argv, exit);
+	//	if (exit) return res;
+	//}
 
-	std::cout << Time(invert, 1e0_opm, 1e1_opm, 10000).count() << std::endl;
+	std::cout << Time(invert, 1e0_opm, 1e1_opm, 100000).count()  * 1000 << std::endl;
+	std::cout << Time(invert3, 1e0_opm, 1e1_opm, 100000).count() * 1000 << std::endl;
 	
-	ExpressionParser parser;
-	parser.RegisterFn("ln", ln);
-	parser.RegisterFn("exp", exp);
-	parser.RegisterFn("pow", pow);
-	parser.RegisterFn("sin", sin);
-	parser.RegisterFn("cos", cos);
-	parser.RegisterFn("tan", tan);
+	//ExpressionParser parser;
+	//parser.RegisterFn("ln", ln);
+	//parser.RegisterFn("exp", exp);
+	//parser.RegisterFn("pow", pow);
+	//parser.RegisterFn("sin", sin);
+	//parser.RegisterFn("cos", cos);
+	//parser.RegisterFn("tan", tan);
 
-	const auto expr = parser.Parse("1 / x");
-	auto ctx = ExpressionContext();
-	ctx.set(1.414e0_opm, "x");
-	
-	const auto res = expr(ctx);
+	//const auto expr = parser.Parse("1 / x");
+	//auto ctx = ExpressionContext();
+	//ctx.set(1.414e0_opm, "x");
+	//
+	//const auto res = expr(ctx);
 
-	char str[256] = {};
-	format(res, str, FormatMode::Standard);
-	std::cout << str << std::endl;
+	//char str[256] = {};
+	//format(res, str, FormatMode::Standard);
+	//std::cout << str << std::endl;
 	
 	//std::cout << "Ln(x)  took   " << Time(ln, 1e0_opm, 1e100_opm).count() << "ms" << std::endl;
 	//std::cout << "Exp(x) took   " << Time(exp, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;

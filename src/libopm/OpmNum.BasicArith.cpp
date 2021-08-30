@@ -38,8 +38,8 @@ OpmNum operator+(const OpmNum& a, const OpmNum& b)
         out >>= 1;
         out[0] |= 0x10000000;
     }
-	
-    return out.normalize();
+	out.normalize();
+    return out;
 }
 
 OpmNum operator-(const OpmNum& a)
@@ -93,7 +93,8 @@ OpmNum operator*(const OpmNum& a, const OpmNum& b)
         out[0] |= ovrflow << 4;
     }
 
-    return out.normalize();
+    out.normalize();
+    return out;
 }
 
 const OpmNum divPoly[4] =
@@ -102,6 +103,13 @@ const OpmNum divPoly[4] =
         OpmNum::Constant<0x66125796,0x29489886,0x88927665,0x98275696,0x98963457,0x06396934,0x14872640,0x48435871,0x66542804>(true, -1),
         OpmNum::Constant<0x10481649,0x06581789,0x93427391,0x70156588,0x50880384,0x38786165,0x08659762,0x61251146,0x07168912>(false, -1),
         OpmNum::Constant<0x53308417,0x50369191,0x34030308,0x76979078,0x02451145,0x22748542,0x16562836,0x26420482,0x09293003>(true, -3)
+};
+
+const OpmNum divPoly2[3] =
+{
+        OpmNum::Constant<0x11824555,0x32034212,0x76300561,0x14500599,0x95749103,0x04307447,0x93153610,0x27279028,0x24951218>(false, 0),
+        OpmNum::Constant<0x32698738,0x63616123,0x51790334,0x42777330,0x82625112,0x87899286,0x68690785,0x46114962,0x60592856>(true, -1),
+        OpmNum::Constant<0x23088615,0x70207237,0x96404203,0x54508776,0x23157839,0x68390415,0x33913508,0x37790497,0x39356145>(false, -2)
 };
 
 OpmNum invert(const OpmNum& num)
@@ -116,6 +124,27 @@ OpmNum invert(const OpmNum& num)
     
     for (int i = 0; i < 6; i++) {
         out = (out + out * (Constants::one - (out * o2)));
+    }
+
+    out.exponent += nexp;
+	out.isNegative = num.isNegative;
+    return out;
+}
+
+OpmNum invert3(const OpmNum& num)
+{
+	const int32_t nexp = -num.exponent;
+
+	OpmNum o2 = num;
+	o2.exponent = 0;
+	o2.isNegative = false;
+	
+    OpmNum out = horner(o2, divPoly2);
+    
+    for (int i = 0; i < 4; i++) {
+        OpmNum e = 1e0_opm - o2 * out;
+        OpmNum y = out * e;
+        out = out + y + y * e;
     }
 
     out.exponent += nexp;

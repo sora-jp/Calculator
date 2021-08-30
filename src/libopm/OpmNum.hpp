@@ -120,6 +120,7 @@ OpmNum operator-(const OpmNum& a);
 
 OpmNum abs(const OpmNum& a);
 OpmNum invert(const OpmNum& a);
+OpmNum invert3(const OpmNum& a);
 
 OpmNum ln(const OpmNum& arg);
 OpmNum log2(const OpmNum& arg);

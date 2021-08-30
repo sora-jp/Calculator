@@ -13,14 +13,11 @@ OpmNum exp(const OpmNum& arg)
     const bool shouldInvert = arg.isNegative;
     const uint32_t scale = Prescale(accumulator, Constants::ln10);
 
-	uint8_t counts[GROUPS * 8];
-	memset(counts, 0, GROUPS * 8);
+	uint8_t counts[GROUPS * 8] = {};
+
+    PsDiv(accumulator, Tables::lnTable, counts);
 	
-	PsDiv(accumulator, Tables::lnTable, counts);
-	
-	accumulator.Clear();
-	accumulator.groups[0] = 0x10000000;
-    accumulator.exponent = 0;
+	accumulator = 1e0_opm;
 	
     for (int32_t i = GROUPS * 8 - 1; i >= 0; i--)
     {

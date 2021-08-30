@@ -9,9 +9,9 @@ poly = 0;
 for i from 0 to 10 do {
 	p = remez(1/x, i, [1;10]);
 	err = ~dirtyinfnorm(p - 1/x, [1;10]);
-	iters = ceil(log2(-P/log10(err)));
-	adds = iters * 2 + i + 1;
-	muls = iters * 2 + i + 1;
+	iters = ceil(log2(-P/log10(err))/log2(3));
+	adds = iters * 3 + i + 1;
+	muls = iters * 3 + i + 1;
 	print("Polynomial approximation grade", i, ", ops:", adds + muls, ", iters:", iters);
 	
 	if (adds + muls <= best) then {
@@ -20,7 +20,6 @@ for i from 0 to 10 do {
 	};
 };
 
-print("Result:", poly);
 r = degree(poly);
 
 bashexecute("rm poly.txt");

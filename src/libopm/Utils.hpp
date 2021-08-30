@@ -53,7 +53,7 @@ inline uint32_t PartialAddD(OpmNum& a, uint64_t val, uint32_t lowGroupStart) {
     if (lowGroupStart < 1) [[unlikely]] return val >> 32;
     a[lowGroupStart - 1u] = AddGroup(a[lowGroupStart - 1u], val >> 32, carry);
 
-    for (uint32_t i = lowGroupStart - 2u; carry && i >= 0; i--) [[unlikely]] {
+    for (int32_t i = lowGroupStart - 2u; carry && i >= 0; i--) [[unlikely]] {
         a[i] = AddGroup(a[i], 0, carry);
     }
 
