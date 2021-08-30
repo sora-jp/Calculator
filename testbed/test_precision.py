@@ -20,7 +20,7 @@ mpmath.mp.dps = DIGITS
 
 
 def gen_single(start: mpmath.mpf, norm_fac: mpmath.mpf, x: int):
-    return start + norm_fac * x + norm_fac * mpmath.rand()
+    return start + norm_fac * x #+ norm_fac * mpmath.rand()
 
 
 def calc_error(actual, expected):
@@ -119,8 +119,8 @@ def test(fn_name: str, fn, count: int, min: mpmath.mpf, max: mpmath.mpf):
 
 
 def lnn(x):
-    return mpmath.sin(x)
+    return mpmath.exp(x)
 
 
 if __name__ == "__main__":
-    test("sin", lnn, 1000000, -mpmath.pi() * 2, mpmath.pi() * 2)
+    test("exp", lnn, 320, mpmath.mpf(0), mpmath.mpf(1))

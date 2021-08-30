@@ -137,6 +137,11 @@ OpmNum sin(const OpmNum& arg);
 OpmNum cos(const OpmNum& arg);
 void trig(const OpmNum& arg, OpmNum& sin, OpmNum& cos, OpmNum& tan);
 
+OpmNum horner(const OpmNum& x, const OpmNum* coeffs, size_t size);
+
+template<size_t Size>
+OpmNum horner(const OpmNum& x, const OpmNum (&coeffs)[Size]) { return horner(x, coeffs, Size); }
+
 OpmNum parse(const char* str);
 
 enum class FormatMode { Standard, Scientific, DebugRaw, Full };

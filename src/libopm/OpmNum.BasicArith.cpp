@@ -96,8 +96,13 @@ OpmNum operator*(const OpmNum& a, const OpmNum& b)
     return out.normalize();
 }
 
-static const OpmNum ia = OpmNum::Constant<0x49700000, 0, 0, 0, 0, 0, 0, 0, 0>(false, -2);
-static const OpmNum ib = OpmNum::Constant<0x54670000, 0, 0, 0, 0, 0, 0, 0, 0>(false, -1);
+const OpmNum divPoly[4] =
+{
+        OpmNum::Constant<0x14986832,0x98050964,0x82742067,0x30439523,0x66230461,0x87429202,0x59636146,0x67358990,0x68738638>(false, 0),
+        OpmNum::Constant<0x66125796,0x29489886,0x88927665,0x98275696,0x98963457,0x06396934,0x14872640,0x48435871,0x66542804>(true, -1),
+        OpmNum::Constant<0x10481649,0x06581789,0x93427391,0x70156588,0x50880384,0x38786165,0x08659762,0x61251146,0x07168912>(false, -1),
+        OpmNum::Constant<0x53308417,0x50369191,0x34030308,0x76979078,0x02451145,0x22748542,0x16562836,0x26420482,0x09293003>(true, -3)
+};
 
 OpmNum invert(const OpmNum& num)
 {
@@ -107,9 +112,9 @@ OpmNum invert(const OpmNum& num)
 	o2.exponent = 0;
 	o2.isNegative = false;
 	
-    OpmNum out = (ib - (o2 * ia));
+    OpmNum out = horner(o2, divPoly);
     
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 6; i++) {
         out = (out + out * (Constants::one - (out * o2)));
     }
 

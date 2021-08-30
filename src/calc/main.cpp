@@ -45,10 +45,12 @@ int main(int argc, char** argv)
 	if (argc > 1)
 	{
 		bool exit;
-		auto res = TestPrecision(argc, argv, exit);
+		const auto res = TestPrecision(argc, argv, exit);
 		if (exit) return res;
 	}
 
+	std::cout << Time(invert, 1e0_opm, 1e1_opm, 10000).count() << std::endl;
+	
 	ExpressionParser parser;
 	parser.RegisterFn("ln", ln);
 	parser.RegisterFn("exp", exp);
@@ -57,14 +59,13 @@ int main(int argc, char** argv)
 	parser.RegisterFn("cos", cos);
 	parser.RegisterFn("tan", tan);
 
-	const auto expr = parser.Parse("-x * 2");
+	const auto expr = parser.Parse("1 / x");
 	auto ctx = ExpressionContext();
 	ctx.set(1.414e0_opm, "x");
 	
 	const auto res = expr(ctx);
 
-	char str[256];
-	memset(str, 0, 256);
+	char str[256] = {};
 	format(res, str, FormatMode::Standard);
 	std::cout << str << std::endl;
 	
