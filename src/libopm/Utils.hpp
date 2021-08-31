@@ -69,7 +69,7 @@ inline uint32_t Prescale(OpmNum& num, const OpmNum& scaleConstant)
 		OpmNum scaler = scaleConstant;
 		scaler.isNegative = !num.isNegative;
 		
-		for (int i = num.exponent; i >= 0; i--)
+		for (int i = num.exponent; i >= scaleConstant.exponent; i--)
 		{
 			scaler.exponent = i;
 			out *= 10;
@@ -97,8 +97,8 @@ inline void PsDiv(OpmNum& acc, const OpmNum* table, uint8_t* coeffs)
 		do
 		{
 			OpmNum y = -table[i];
-			
-			OpmNum t = acc + y;
+
+			const OpmNum t = acc + y;
             if (t.isNegative) break;
 			
 			acc = t;
