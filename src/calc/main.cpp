@@ -49,8 +49,8 @@ int main(int argc, char** argv)
 	//	if (exit) return res;
 	//}
 
-	std::cout << Time(invert, 1e0_opm, 1e1_opm, 100000).count()  * 1000 << std::endl;
-	std::cout << Time(invert3, 1e0_opm, 1e1_opm, 100000).count() * 1000 << std::endl;
+	std::cout << Time(invert, 1e0_opm, 1e1_opm, 100000)  * 1000 << std::endl;
+	std::cout << Time(invert3, 1e0_opm, 1e1_opm, 100000) * 1000 << std::endl;
 	
 	//ExpressionParser parser;
 	//parser.RegisterFn("ln", ln);

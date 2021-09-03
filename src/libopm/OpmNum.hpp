@@ -15,8 +15,8 @@ public:
     int32_t exponent;
     uint32_t groups[GROUPS] {};
     
-    OpmNum() : isNegative(false), isNan(false), isInfinity(false), exponent(0) { }
-    OpmNum(const OpmNum& copy);
+    OpmNum() : isNegative(false), isNan(false), isInfinity(false), exponent(0) {}
+    OpmNum(const OpmNum& copy) = default;
     explicit OpmNum(int32_t num);
 
 	template<uint32_t... gs>
@@ -89,15 +89,6 @@ inline OpmNum::OpmNum(int32_t num): isNegative(false), isNan(false), isInfinity(
 	}
 }
 
-inline OpmNum::OpmNum(const OpmNum& copy): OpmNum()
-{
-	isNegative = copy.isNegative;
-	isNan = copy.isNan;
-	isInfinity = copy.isInfinity;
-	exponent = copy.exponent;
-	for (auto i = 0u; i < GROUPS; i++) groups[i] = copy.groups[i];
-}
-
 bool operator==(const OpmNum& a, const OpmNum& b);
 bool operator!=(const OpmNum& a, const OpmNum& b);
 bool operator<(const OpmNum& a, const OpmNum& b);
@@ -152,8 +143,7 @@ OpmNum rand(OpmNum min, OpmNum max);
 
 inline void print(const OpmNum& num)
 {
-	char str[256];
-	memset(str, 0, 256);
+	char str[256] = {};
 	format(num, str, FormatMode::Scientific);
 	std::cout << str << std::endl;
 }
