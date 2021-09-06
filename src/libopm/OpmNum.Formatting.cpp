@@ -87,7 +87,7 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 		buffer[len + 4] = '1';
 		buffer[len + 5] = '0';
 		buffer[len + 6] = '^';
-		itoa(num.exponent, &buffer[len + 7], 10);
+		sprintf(&buffer[len + 7], "%d", num.exponent);
 		return 0;
 	}
 
