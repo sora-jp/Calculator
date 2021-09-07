@@ -54,6 +54,11 @@ OpmNum operator-(const OpmNum& a, const OpmNum& b)
     return a + (-b);
 }
 
+inline void MulPass(OpmNum& out, int64_t* partialS)
+{
+
+}
+
 OpmNum operator*(const OpmNum& a, const OpmNum& b)
 {
     OpmNum out;
@@ -61,12 +66,12 @@ OpmNum operator*(const OpmNum& a, const OpmNum& b)
     out.isNegative = a.isNegative ^ b.isNegative;
 
     uint64_t ovrflow = 0;
-    for (int ai = GROUPS - 1; ai >= 0; --ai) 
+    for (int ai = GROUPS - 1; ai >= 0; --ai)
     {
         if (a[ai] == 0) continue;
         uint64_t nxt = 0;
 
-        for (int bi = GROUPS - (ai + 1); bi >= -ai; --bi) 
+        for (int bi = GROUPS - (ai + 1); bi >= -ai; --bi)
         {
             if (nxt == 0 && bi < 0) break;
             auto m = bi >= 0 ? MulGroup(a[ai], b[bi]) : 0;

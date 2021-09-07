@@ -7,6 +7,9 @@
 #define DIGIT(n, d) (((n).groups[(d) >> 3] >> ((7 - ((d) & 7)) * 4)) & 0xf)
 
 inline uint32_t AddGroup(const uint32_t a, const uint32_t b, bool& carry) {
+    if (a == 0 && !carry) return b;
+    if (b == 0 && !carry) return a;
+
     uint64_t a2 = a + 0x0666666666666666;
 
     uint64_t partial_sum = a2 + b + (carry ? 1 : 0);
