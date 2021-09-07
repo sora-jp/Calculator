@@ -5,25 +5,26 @@
 const uint32_t TC = 0x99999999;
 OpmNum operator+(const OpmNum& a, const OpmNum& b)
 {
-    if (is_zero(a)) return b;
-	if (is_zero(b)) return a;
-	
-    OpmNum out, na = a, nb = b;
-    if (na.exponent < nb.exponent) std::swap(na, nb);
-    
-    nb >>= na.exponent - nb.exponent;
-    out.exponent = na.exponent;
+    if (a.exponent < b.exponent) return b + a;
 
-    bool isSub = na.isNegative != nb.isNegative;
-    bool tcA = na.isNegative && isSub, tcB = nb.isNegative && isSub;
+	if (is_zero(b)) return a;
+    if (is_zero(a)) return b;
+
+    OpmNum out, nb = b;
+
+    nb >>= a.exponent - nb.exponent;
+    out.exponent = a.exponent;
+
+    bool isSub = a.isNegative != nb.isNegative;
+    bool tcA = a.isNegative && isSub, tcB = nb.isNegative && isSub;
     bool carry = isSub;
 
     for (int i = GROUPS - 1; i >= 0; --i) 
     {
-        out[i] = AddGroup(tcA ? TC - na[i] : na[i], tcB ? TC - nb[i] : nb[i], carry);
+        out[i] = AddGroup(tcA ? TC - a[i] : a[i], tcB ? TC - nb[i] : nb[i], carry);
     }
 	
-    out.isNegative = isSub ? !carry : na.isNegative;
+    out.isNegative = isSub ? !carry : a.isNegative;
 
     if (!carry && isSub) 
     {
@@ -144,7 +145,7 @@ OpmNum invert3(const OpmNum& num)
 	o2.exponent = 0;
 	o2.isNegative = false;
 	
-    OpmNum out = horner(o2, divPoly2);
+    OpmNum out = horner_c(o2, divPoly2);
     
     for (int i = 0; i < 4; i++) {
         OpmNum e = 1e0_opm - o2 * out;

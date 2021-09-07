@@ -1,8 +1,10 @@
 /[Bb]in/**
 /[Oo]bj/**
 /.vs/**
+/.ccls-cache/**
 *.sln
 *.vcxproj
 *.vcxproj.*
 [Mm]akefile
 *.make
+compile_commands.json

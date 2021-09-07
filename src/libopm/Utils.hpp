@@ -43,27 +43,34 @@ inline uint64_t MulGroup(const uint32_t a, const uint32_t b) {
     uint64_t out = 0;
 
     const uint64_t partialO1 = 
-		MultiplyByteWide(a, b) // 0 0
-		| MultiplyByteWide(a >> 8, b >> 8) << 16 // 1 1
-		| MultiplyByteWide(a >> 16, b >> 16) << 32 // 2 2
+		  MultiplyByteWide(a, b)					// 0 0
+		| MultiplyByteWide(a >> 8, b >> 8) << 16	// 1 1
+		| MultiplyByteWide(a >> 16, b >> 16) << 32	// 2 2
 		| MultiplyByteWide(a >> 24, b >> 24) << 48; // 3 3
 
-    const uint64_t partialO2 = MultiplyByteWide(a, b >> 8) << 8 // 0 1
-		| MultiplyByteWide(a >> 8, b >> 16) << 24 // 1 2
+    const uint64_t partialO2 = 
+	  	  MultiplyByteWide(a, b >> 8) << 8			// 0 1
+		| MultiplyByteWide(a >> 8, b >> 16) << 24	// 1 2
 		| MultiplyByteWide(a >> 16, b >> 24) << 40; // 2 3
 
-    const uint64_t partialO3 = MultiplyByteWide(a >> 8, b) << 8 // 1 0
-		| MultiplyByteWide(a >> 16, b >> 8) << 24 // 2 1
+    const uint64_t partialO3 = 
+		  MultiplyByteWide(a >> 8, b) << 8			// 1 0
+		| MultiplyByteWide(a >> 16, b >> 8) << 24	// 2 1
 		| MultiplyByteWide(a >> 24, b >> 16) << 40; // 3 2
 
-    const uint64_t partialO4 = MultiplyByteWide(a >> 16, b) << 16 // 2 0
-		| MultiplyByteWide(a >> 24, b >> 8) << 32; // 3 1
+    const uint64_t partialO4 = 
+		  MultiplyByteWide(a >> 16, b) << 16		// 2 0
+		| MultiplyByteWide(a >> 24, b >> 8) << 32;	// 3 1
 
-    const uint64_t partialO5 = MultiplyByteWide(a, b >> 16) << 16 // 0 2
-		| MultiplyByteWide(a >> 8, b >> 24) << 32; // 1 3
+    const uint64_t partialO5 = 
+		  MultiplyByteWide(a, b >> 16) << 16		// 0 2
+		| MultiplyByteWide(a >> 8, b >> 24) << 32;	// 1 3
 
-    const uint64_t partialO6 = MultiplyByteWide(a >> 24, b) << 24; // 3 0
-    const uint64_t partialO7 = MultiplyByteWide(a, b >> 24) << 24; // 0 3
+    const uint64_t partialO6 = 
+		MultiplyByteWide(a >> 24, b) << 24;			// 3 0
+
+    const uint64_t partialO7 = 
+		MultiplyByteWide(a, b >> 24) << 24;			// 0 3
 
 	out = AddDGroupNoCarry(partialO1, partialO2);
 	out = AddDGroupNoCarry(out, partialO3);

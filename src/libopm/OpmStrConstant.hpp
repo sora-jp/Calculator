@@ -13,10 +13,10 @@ int32_t ParseExp(int32_t exponent)
 {
 	if (C == '-')
 	{
-		return -ParseExp<D...>(0);
+		return -ParseExp<D0, D...>(0);
 	}
 
-	return ParseExp<D...>(exponent * 10 + (C - '0'));
+	return ParseExp<D0, D...>(exponent * 10 + (C - '0'));
 }
 
 template<uint32_t Digit, char C>
@@ -31,15 +31,15 @@ void ParseOpm(OpmNum& output)
 	if (C == '-')
 	{
 		output.isNegative = true;
-		ParseOpm<Digit, D...>(output);
+		ParseOpm<Digit, D0, D...>(output);
 	}
 	else if (C == '.')
 	{
-		ParseOpm<Digit, D...>(output);
+		ParseOpm<Digit, D0, D...>(output);
 	}
 	else if (C == 'e' || C == 'E')
 	{
-		output.exponent = ParseExp<D...>(0);
+		output.exponent = ParseExp<D0, D...>(0);
 		return;
 	}
 	else
@@ -47,7 +47,7 @@ void ParseOpm(OpmNum& output)
 		//static_assert(C == '0' || C == '1' || C == '2' || C == '3' || C == '4' || C == '5' || C == '6' || C == '7' || C == '8' || C == '9', "Invalid character found in literal");
 		
 		if (Digit < DIGITCOUNT) output.groups[(Digit >> 3)] |= (C - '0') << ((7 - (Digit & 7)) * 4);
-		ParseOpm<Digit + 1, D...>(output);
+		ParseOpm<Digit + 1, D0, D...>(output);
 	}
 }
 

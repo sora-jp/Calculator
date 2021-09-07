@@ -116,6 +116,8 @@ OpmNum& OpmNum::roundToNearest()
 
 OpmNum& OpmNum::normalize()
 {
+    //if (groups[0] & 0x10000000) return *this;
+
     bool zero = true;
 	for (auto g : groups) zero &= g == 0;
 	if (zero) return *this;

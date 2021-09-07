@@ -14,7 +14,7 @@ long double Time(std::function<OpmNum(const OpmNum&)> fn, const OpmNum& min, con
 		d += static_cast<long double>((t2 - t1).count());
 	}
 
-	return d / (1000000ull * iters);
+	return d / (1000000.0l * iters);
 }
 
 long double Time(std::function<OpmNum(const OpmNum&, const OpmNum&)> fn, const OpmNum& min, const OpmNum& max, uint32_t iters)
@@ -25,6 +25,9 @@ long double Time(std::function<OpmNum(const OpmNum&, const OpmNum&)> fn, const O
 	{
 		const auto num1 = r.rand();
 		const auto num2 = r.rand();
+		//print(num1);
+		//print(num2);
+
 		auto t1 = std::chrono::high_resolution_clock::now();
 		volatile auto res = fn(num1, num2);
 		auto t2 = std::chrono::high_resolution_clock::now();

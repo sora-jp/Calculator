@@ -139,8 +139,6 @@ OpmNum parse(const char* str);
 enum class FormatMode { Standard, Scientific, DebugRaw, Full };
 int format(const OpmNum& num, char* buffer, FormatMode mode);
 
-OpmNum rand(OpmNum min, OpmNum max);
-
 inline void print(const OpmNum& num)
 {
 	char str[256] = {};
@@ -149,3 +147,27 @@ inline void print(const OpmNum& num)
 }
 
 #include "OpmStrConstant.hpp"
+
+template<int32_t A, int32_t B>
+struct equal : std::false_type{};
+
+template<int32_t A>
+struct equal<A, A> : std::true_type{};
+
+template<size_t Size, int32_t Index>
+inline OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::false_type)
+{
+	return coeffs[Index];
+}
+
+template<size_t Size, int32_t Index>
+inline OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::true_type)
+{
+	return coeffs[Index] + x * horner_impl<Size, Index + 1>(x, coeffs, equal<Index + 2, Size> {});
+}
+
+template<size_t Size>
+inline OpmNum horner_c(const OpmNum& x, const OpmNum(&coeffs)[Size])
+{
+	return horner_impl<Size, 0>(x, coeffs, std::true_type {});
+}
