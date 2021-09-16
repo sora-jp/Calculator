@@ -8,3 +8,5 @@
 [Mm]akefile
 *.make
 compile_commands.json
+*.log
+imgui.ini

@@ -42,15 +42,15 @@ std::map<std::string, void(*)(OpmStack<10>&)> cfnMap =
 
 int main(int argc, char** argv)
 {
-	//if (argc > 1)
-	//{
-	//	bool exit;
-	//	const auto res = TestPrecision(argc, argv, exit);
-	//	if (exit) return res;
-	//}
+	if (argc > 1)
+	{
+		bool exit;
+		const auto res = TestPrecision(argc, argv, exit);
+		if (exit) return res;
+	}
 
-	print(-1e7_opm);
-	print(1e7_opm);
+	//print(-1e7_opm);
+	//print(1e7_opm);
 
 	std::cout << Time(operator+, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;
 	std::cout << Time(operator*, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;

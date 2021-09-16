@@ -19,13 +19,13 @@ OpmNum exp(const OpmNum& arg)
 	
 	accumulator = 1e0_opm;
 	
-    for (int32_t i = GROUPS * 8 - 1; i >= 0; i--)
+    for (int32_t i = 0; i < GROUPS * 8; i++)
     {
 		for (int j = 0; j < counts[i]; j++)
 		{
 			OpmNum y = accumulator;
 			y.exponent -= i;
-			
+
 			accumulator = accumulator + y;
 		}
     }

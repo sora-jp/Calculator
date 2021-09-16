@@ -123,11 +123,16 @@ OpmNum exp2(const OpmNum& arg);
 OpmNum exp10(const OpmNum& arg);
 OpmNum pow(const OpmNum& x, const OpmNum& y);
 
-OpmNum tan(const OpmNum& arg);
-OpmNum cot(const OpmNum& arg);
 OpmNum sin(const OpmNum& arg);
 OpmNum cos(const OpmNum& arg);
+OpmNum tan(const OpmNum& arg);
+OpmNum cot(const OpmNum& arg);
 void trig(const OpmNum& arg, OpmNum& sin, OpmNum& cos, OpmNum& tan);
+
+OpmNum asin(const OpmNum& arg);
+OpmNum acos(const OpmNum& arg);
+OpmNum atan(const OpmNum& arg);
+OpmNum atan2(const OpmNum& x, const OpmNum& y);
 
 OpmNum horner(const OpmNum& x, const OpmNum* coeffs, size_t size);
 
@@ -155,19 +160,19 @@ template<int32_t A>
 struct equal<A, A> : std::true_type{};
 
 template<size_t Size, int32_t Index>
-inline OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::false_type)
+OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::false_type)
 {
 	return coeffs[Index];
 }
 
 template<size_t Size, int32_t Index>
-inline OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::true_type)
+OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::true_type)
 {
 	return coeffs[Index] + x * horner_impl<Size, Index + 1>(x, coeffs, equal<Index + 2, Size> {});
 }
 
 template<size_t Size>
-inline OpmNum horner_c(const OpmNum& x, const OpmNum(&coeffs)[Size])
+OpmNum horner_c(const OpmNum& x, const OpmNum(&coeffs)[Size])
 {
 	return horner_impl<Size, 0>(x, coeffs, std::true_type {});
 }

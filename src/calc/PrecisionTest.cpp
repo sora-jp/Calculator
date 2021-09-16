@@ -11,7 +11,8 @@ const std::map<std::string, OpmNum(*)(const OpmNum&)> fnMap =
 	{"exp", &exp},
 	{"sin", &sin},
 	{"cos", &cos},
-	{"tan", &tan}
+	{"tan", &tan},
+	{"atan", &atan}
 };
 
 inline OpmNum get()

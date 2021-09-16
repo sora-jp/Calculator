@@ -11,7 +11,7 @@ int fmtlen(const OpmNum& num)
 inline int getCutoffIdx(const OpmNum& num)
 {
 	//return DIGITCOUNT;
-	for (int i = DIGITCOUNT - 1; i >= 0; i--)
+	for (int i = DIGITCOUNT - 9; i >= 0; i--)
 	{
 		if (DIGIT(num, i) != 0) return i + 1;
 	}
@@ -54,17 +54,17 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 		}
 	}
 	
-	if (mode == FormatMode::Scientific)
+	if (mode == FormatMode::Scientific || mode == FormatMode::DebugRaw)
 	{
 		if (num.isNegative)
 		{
 			buffer[0] = '-';
+			buffer++;
 		}
 		else
 		{
-			buffer[0] = '+';
+			//buffer[0] = '+';
 		}
-		buffer++;
 		
 		buffer[0] = DIGIT(num, 0) + '0';
 		buffer[1] = '.';
@@ -81,13 +81,21 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 			buffer[i + 1] = DIGIT(num, i) + '0';
 		}
 
-		buffer[len + 1] = ' ';
-		buffer[len + 2] = '*';
-		buffer[len + 3] = ' ';
-		buffer[len + 4] = '1';
-		buffer[len + 5] = '0';
-		buffer[len + 6] = '^';
-		sprintf(&buffer[len + 7], "%d", num.exponent);
+		if (mode == FormatMode::Scientific) 
+		{
+			buffer[len + 1] = ' ';
+			buffer[len + 2] = '*';
+			buffer[len + 3] = ' ';
+			buffer[len + 4] = '1';
+			buffer[len + 5] = '0';
+			buffer[len + 6] = '^';
+			sprintf(&buffer[len + 7], "%d", num.exponent);
+		}
+		else
+		{
+			buffer[len + 1] = 'e';
+			sprintf(&buffer[len + 2], "%d", num.exponent);
+		}
 		return 0;
 	}
 
