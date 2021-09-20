@@ -42,7 +42,7 @@ std::map<std::string, void(*)(OpmStack<10>&)> cfnMap =
 
 int main(int argc, char** argv)
 {
-	if (argc > 1)
+	//if (argc > 1)
 	{
 		bool exit;
 		const auto res = TestPrecision(argc, argv, exit);

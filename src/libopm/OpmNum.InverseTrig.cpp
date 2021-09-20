@@ -6,29 +6,36 @@ OpmNum atan2(const OpmNum& x, const OpmNum& y)
 {
 	uint8_t coeffs[DIGITCOUNT] = {};
 
+	bool neg = x.isNegative ^ y.isNegative;
+
 	OpmNum nx = x;
 	OpmNum ny = y;
+	nx.isNegative = ny.isNegative = false;
 
 	for (int i = 0; i < DIGITCOUNT; i++)
 	{
+		OpmNum z = ny;
+		z.exponent += i;
 		while (true)
 		{
-			OpmNum xs = nx;
-			OpmNum ys = ny;
+			//xs.exponent -= i;
+			auto zs = z - nx;
+			if (zs.isNegative) break;
 
-			xs.exponent -= i;
-			xs = ny - xs;
-			if (xs.isNegative) break;
 
-			ys = nx + ys;
-
-			ny = xs;
-			nx = ys;
+			auto xs = z;
+			xs.exponent -= 2 * i;
+			nx = nx + xs;
+			z = zs;
 			coeffs[i]++;
 		}
+		z.exponent -= i;
+		ny = z;
 	}
 
-	return PsMul(Tables::atanTable, coeffs);
+	auto o = PsMul(Tables::atanTable, coeffs);
+	o.isNegative = neg;
+	return o;
 }
 
 OpmNum atan(const OpmNum& arg)

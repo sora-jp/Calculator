@@ -44,6 +44,7 @@ project "Testbed"
 	language "C++"
 	cppdialect "C++17"
 	targetdir "bin/testbed/%{cfg.buildcfg}"
+	buildoptions { "/openmp" }
 	
 	files { "src/testbed/**.h", "src/testbed/**.cpp", "src/testbed/**.hpp", "src/testbed/**.inl" }
 	includedirs { "src/libopm", "vendor/mahi/include", "vendor/ntl/include" }

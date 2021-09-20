@@ -23,5 +23,12 @@ OpmNum parse(const char* str)
 
 	o.exponent = exponent;
 	o.isNegative = negative;
+
+	//if (is_zero(o)) 
+	//{
+	//	o.exponent = 0;
+	//	o.isNegative = false;
+	//}
+
 	return o;
 }

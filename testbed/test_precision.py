@@ -9,7 +9,7 @@ import multiprocessing
 import itertools
 import tqdm
 
-proc = subprocess.Popen(["../bin/Release/Calculator.exe", "--info"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+proc = subprocess.Popen(["../bin/calc/Release/Calculator.exe", "--info"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
 GROUP_SIZE = 8
 GROUPS = int(proc.communicate()[0])
@@ -33,8 +33,8 @@ def calc_error(actual, expected):
 
 def test_thread(args):
     (fn_name, nums) = args
-    proc_c = subprocess.Popen(["../bin/Release/Calculator.exe", "--test"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    proc_input = bytes(F"{fn_name}\n{len(nums)}\n" + "\n".join([str(s) for s in nums]), "ascii")
+    proc_c = subprocess.Popen(["../bin/calc/Release/Calculator.exe", "--test"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    proc_input = bytes(F"{fn_name}\r\n{len(nums)}\r\n" + "\r\n".join([str(s) for s in nums]), "ascii")
     o = proc_c.communicate(proc_input)[0]
     o = o.splitlines()
 
@@ -85,9 +85,10 @@ def test(fn_name: str, fn, count: int, min: mpmath.mpf, max: mpmath.mpf):
         for i in tqdm.trange(count, desc="Aggregating results"):
             e = calc_error(calcres[i], ys[i])
             errs.append(e)
-            if e.__abs__() > max_err[0]:
+            e = e.__abs__()
+            if e > max_err[0]:
                 max_err = (e, xs[i], ys[i], calcres[i][0])
-            elif e.__abs__() < min_err[0]:
+            elif e < min_err[0]:
                 min_err = (e, xs[i], ys[i], calcres[i][0])
             mean = mean + e / count
             sqrmean = sqrmean + e * e / count
@@ -115,12 +116,13 @@ def test(fn_name: str, fn, count: int, min: mpmath.mpf, max: mpmath.mpf):
         plt.ioff()
         plt.plot(xs, errs)
         plt.plot(xs, ys)
+        plt.plot(xs, np.array([mpmath.mpmathify(x[0]) for x in calcres]))
         plt.show()
 
 
-def lnn(x):
-    return mpmath.exp(x)
+def testfun(x):
+    return mpmath.atan(x)
 
 
 if __name__ == "__main__":
-    test("exp", lnn, 320, mpmath.mpf(0), mpmath.mpf(1))
+    test("atan", testfun, 100000, mpmath.mpf(-2), mpmath.mpf(2))
