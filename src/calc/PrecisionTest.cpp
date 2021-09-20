@@ -13,6 +13,8 @@ const std::map<std::string, OpmNum(*)(const OpmNum&)> fnMap =
 	{"cos", &cos},
 	{"tan", &tan},
 	{"atan", &atan},
+	{"asin", &asin},
+	{"acos", &acos},
 	{"inv", &invert},
 	{"inv3", &invert3}
 };

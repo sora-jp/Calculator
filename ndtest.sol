@@ -12,7 +12,7 @@ for i from 0 to 10 do {
 	iters = ceil(log2(-P/log10(err))/log2(3));
 	adds = iters * 3 + i + 1;
 	muls = iters * 3 + i + 1;
-	print("Polynomial approximation grade", i, ", ops:", adds + muls, ", iters:", iters);
+	print("Polynomial approximation grade", i, ", ops:", adds + muls, ", iters:", iters, ", err:", err);
 	
 	if (adds + muls <= best) then {
 		best = adds + muls;

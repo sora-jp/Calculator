@@ -128,7 +128,7 @@ OpmNum invert(const OpmNum& num)
 	
     OpmNum out = horner(o2, divPoly);
     
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 9; i++) {
         out = (out + out * (Constants::one - (out * o2)));
     }
 
@@ -137,18 +137,21 @@ OpmNum invert(const OpmNum& num)
     return out;
 }
 
+//TODO: This function really doesn't work. wierd error at x=7, about 10^51 ulp
 OpmNum invert3(const OpmNum& num)
 {
+    return invert(num); // TODO: FIX THIS
+
 	const int32_t nexp = -num.exponent;
 
 	OpmNum o2 = num;
 	o2.exponent = 0;
 	o2.isNegative = false;
 	
-    OpmNum out = horner_c(o2, divPoly2);
+    OpmNum out = divPoly2[0] + o2 * (divPoly2[1] + o2 * divPoly2[2]);
     
     for (int i = 0; i < 4; i++) {
-        OpmNum e = 1e0_opm - o2 * out;
+        OpmNum e = Constants::one - o2 * out;
         OpmNum y = out * e;
         out = out + y + y * e;
     }
