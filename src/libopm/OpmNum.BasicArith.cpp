@@ -55,11 +55,6 @@ OpmNum operator-(const OpmNum& a, const OpmNum& b)
     return a + (-b);
 }
 
-inline void MulPass(OpmNum& out, int64_t* partialS)
-{
-
-}
-
 OpmNum operator*(const OpmNum& a, const OpmNum& b)
 {
     OpmNum out;
@@ -138,6 +133,7 @@ OpmNum invert(const OpmNum& num)
 }
 
 //TODO: This function really doesn't work. wierd error at x=7, about 10^51 ulp
+//This is probably due to the polynomial approximation being very small at x=7 (about 2.5e-2)
 OpmNum invert3(const OpmNum& num)
 {
     return invert(num); // TODO: FIX THIS

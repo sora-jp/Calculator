@@ -50,3 +50,8 @@ OpmNum pow(const OpmNum& x, const OpmNum& y)
 {
 	return exp(y * ln(x));
 }
+
+OpmNum sqrt(const OpmNum& x)
+{
+	return exp(5e-1_opm * ln(x));
+}

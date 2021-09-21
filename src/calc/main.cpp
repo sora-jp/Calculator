@@ -12,6 +12,7 @@
 #include "PrecisionTest.h"
 #include "OpmRand.hpp"
 #include "Timing.h"
+#include "rt_poly/OpmDynamic.h"
 
 #define TIMER_BEGIN(timer) auto _##timer##_1 = std::chrono::steady_clock::now()
 #define TIMER_END(timer) auto _##timer##_2 = std::chrono::steady_clock::now()
@@ -42,7 +43,7 @@ std::map<std::string, void(*)(OpmStack<10>&)> cfnMap =
 
 int main(int argc, char** argv)
 {
-	//if (argc > 1)
+	if (argc > 1)
 	{
 		bool exit;
 		const auto res = TestPrecision(argc, argv, exit);
@@ -51,11 +52,25 @@ int main(int argc, char** argv)
 
 	//print(-1e7_opm);
 	//print(1e7_opm);
+	auto v1 = 7e1_opm;
+	auto v2 = OpmComplex(4e0_opm, -3e1_opm);
 
-	std::cout << Time(operator+, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;
-	std::cout << Time(operator*, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;
-	std::cout << Time(invert,  1e0_opm, 1e1_opm, 100000) * 1000 << std::endl;
-	std::cout << Time(invert3, 1e0_opm, 1e1_opm, 100000) * 1000 << std::endl;
+	auto w1 = wrap(v1);
+	auto w2 = wrap(v2);
+
+	auto a1 = invert(w1);
+	auto a2 = invert(w2);
+
+	auto r1 = *unwrap<OpmNum>(a1);
+	auto r2 = *unwrap<OpmComplex>(a2);
+
+	print(r1);
+	print(r2.real);
+	print(r2.imag);
+	//std::cout << Time(operator+, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;
+	//std::cout << Time(operator*, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;
+	//std::cout << Time(invert,  1e0_opm, 1e1_opm, 100000) * 1000 << std::endl;
+	//std::cout << Time(invert3, 1e0_opm, 1e1_opm, 100000) * 1000 << std::endl;
 	
 	//ExpressionParser parser;
 	//parser.RegisterFn("ln", ln);
@@ -75,9 +90,9 @@ int main(int argc, char** argv)
 	//format(res, str, FormatMode::Standard);
 	//std::cout << str << std::endl;
 	
-	//std::cout << "Ln(x)  took   " << Time(ln, 1e0_opm, 1e100_opm).count() << "ms" << std::endl;
-	//std::cout << "Exp(x) took   " << Time(exp, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
-	//std::cout << "Inv(x) took   " << Time(invert, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
+	//std::cout << "Ln(x)  took   " << Time(ln, 1e0_opm, 1e100_opm) << "ms" << std::endl;
+	//std::cout << "Exp(x) took   " << Time(exp, -1e1_opm, 1e1_opm) << "ms" << std::endl;
+	//std::cout << "Inv(x) took   " << Time(invert, -1e1_opm, 1e1_opm) << "ms" << std::endl;
 	
 	return 0;
 

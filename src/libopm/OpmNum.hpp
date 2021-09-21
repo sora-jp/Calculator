@@ -15,8 +15,8 @@ public:
     int32_t exponent;
     uint32_t groups[GROUPS] {};
     
-    OpmNum() : isNegative(false), isNan(false), isInfinity(false), exponent(0) {}
-    OpmNum(const OpmNum& copy) = default;
+    constexpr OpmNum() : isNegative(false), isNan(false), isInfinity(false), exponent(0) {}
+    constexpr OpmNum(const OpmNum& copy) = default;
     explicit OpmNum(int32_t num);
 
 	template<uint32_t... gs>
@@ -122,6 +122,7 @@ OpmNum exp(const OpmNum& arg);
 OpmNum exp2(const OpmNum& arg);
 OpmNum exp10(const OpmNum& arg);
 OpmNum pow(const OpmNum& x, const OpmNum& y);
+OpmNum sqrt(const OpmNum& x);
 
 OpmNum sin(const OpmNum& arg);
 OpmNum cos(const OpmNum& arg);

@@ -125,4 +125,4 @@ def testfun(x):
 
 
 if __name__ == "__main__":
-    test("acos", testfun, 1000000, mpmath.mpf(-1), mpmath.mpf(1))
+    test("acos", testfun, 100000, mpmath.mpf(-1), mpmath.mpf(1))
