@@ -58,15 +58,15 @@ int main(int argc, char** argv)
 	auto w1 = wrap(v1);
 	auto w2 = wrap(v2);
 
-	auto a1 = invert(w1);
-	auto a2 = invert(w2);
+	auto a1 = w1 + w2;
+	//auto a2 = invert(w2);
 
-	auto r1 = *unwrap<OpmNum>(a1);
-	auto r2 = *unwrap<OpmComplex>(a2);
+	auto r1 = *unwrap<OpmComplex>(a1);
+	//auto r2 = *unwrap<OpmComplex>(a2);
 
-	print(r1);
-	print(r2.real);
-	print(r2.imag);
+	//print(r1);
+	print(r1.real);
+	print(r1.imag);
 	//std::cout << Time(operator+, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;
 	//std::cout << Time(operator*, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;
 	//std::cout << Time(invert,  1e0_opm, 1e1_opm, 100000) * 1000 << std::endl;
