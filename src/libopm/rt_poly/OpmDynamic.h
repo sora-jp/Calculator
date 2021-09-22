@@ -20,7 +20,11 @@
 		if (t1 == TypeOf<OpmNum>     && t2 == TypeOf<OpmNum>)     return wrap(name(*unwrap<OpmNum>    (a), *unwrap<OpmNum>    (b))); \
 		return OpmValue(); \
 	}
-//#define CALL_DYN(name, ...) dyn_##name(__VA_ARGS__)
 
 DECLARE_DYN_1(invert);
+DECLARE_DYN_1(operator-);
+
 DECLARE_DYN_2(operator+);
+DECLARE_DYN_2(operator-);
+DECLARE_DYN_2(operator*);
+DECLARE_DYN_2(operator/);

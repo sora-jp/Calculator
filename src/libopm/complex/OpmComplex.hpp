@@ -12,6 +12,20 @@ public:
 	OpmComplex conjugate() const { return OpmComplex(real, -imag); }
 	OpmNum magnitude() const { return sqrt(real * real + imag * imag); }
 	OpmNum argument() const { return atan2(real, imag); }
+
+	OpmComplex& roundToNearest()
+	{
+		real.roundToNearest();
+		imag.roundToNearest();
+		return *this;
+	}
+
+	OpmComplex& normalize()
+	{
+		real.normalize();
+		imag.normalize();
+		return *this;
+	}
 };
 
 inline OpmComplex conjugate(const OpmComplex& a) { return a.conjugate(); }
@@ -27,3 +41,7 @@ OpmComplex invert(const OpmComplex& a);
 
 OpmComplex exp(const OpmComplex& a);
 OpmComplex ln(const OpmComplex& a);
+
+OpmComplex sin(const OpmComplex& a);
+OpmComplex cos(const OpmComplex& a);
+OpmComplex tan(const OpmComplex& a);

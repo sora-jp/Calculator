@@ -17,7 +17,7 @@ public:
     
     constexpr OpmNum() : isNegative(false), isNan(false), isInfinity(false), exponent(0) {}
     constexpr OpmNum(const OpmNum& copy) = default;
-    explicit OpmNum(int32_t num);
+    OpmNum(int32_t num);
 
 	template<uint32_t... gs>
 	static OpmNum Constant(const bool n, const int32_t e)
@@ -59,9 +59,11 @@ template<uint32_t n, uint32_t t0, uint32_t t1, uint32_t... t> constexpr void cop
 
 inline OpmNum::OpmNum(int32_t num): isNegative(false), isNan(false), isInfinity(false), exponent(0)
 {
-	isNegative = num < 0;
-
-	if (num < 0) num = -num;
+	if (num < 0) 
+	{
+		isNegative = true;
+		num = -num;
+	}
 
 	uint8_t digits[10]{};
 
@@ -134,6 +136,10 @@ OpmNum asin(const OpmNum& arg);
 OpmNum acos(const OpmNum& arg);
 OpmNum atan(const OpmNum& arg);
 OpmNum atan2(const OpmNum& x, const OpmNum& y);
+
+OpmNum sinh(const OpmNum& arg);
+OpmNum cosh(const OpmNum& arg);
+OpmNum tanh(const OpmNum& arg);
 
 OpmNum horner(const OpmNum& x, const OpmNum* coeffs, size_t size);
 

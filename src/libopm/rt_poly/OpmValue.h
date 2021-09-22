@@ -46,7 +46,11 @@ public:
 
 	ValueType type() const { return m_type; }
 	void* value() const { return m_value; }
+	OpmValue& roundToNearest();
+	OpmValue& normalize();
 };
+
+
 
 template<typename T, enable_if_opm_type<T> = true>
 OpmValue wrap(const T& value)
