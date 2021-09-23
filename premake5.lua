@@ -1,10 +1,15 @@
 workspace "Calculator"
-	configurations { "Debug", "Release" }
+	configurations { "Debug", "DebugASAN", "Release" }
     architecture "x86_64"
 
 	filter "configurations:Debug"
 		defines { "DEBUG" }
 		symbols "On"
+		
+	filter "configurations:DebugASAN"
+		defines { "DEBUG" }
+		symbols "On"
+		buildoptions { "/fsanitize=address" }
 	
 	filter "configurations:Release"
 		defines { "NDEBUG" }

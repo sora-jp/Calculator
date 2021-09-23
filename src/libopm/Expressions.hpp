@@ -1,5 +1,6 @@
 #pragma once
-#include "OpmNum.hpp"
+#include "rt_poly/OpmValue.h"
+#include "rt_poly/OpmDynamic.h"
 #include "StackBindings.hpp"
 
 #include <cassert>
@@ -7,17 +8,18 @@
 #include <map>
 
 struct Token;
-typedef OpmNum(*UnaryOp)(const OpmNum&);
-typedef OpmNum(*BinaryOp)(const OpmNum&, const OpmNum&);
+typedef OpmValue(*UnaryOp)(const OpmValue&);
+typedef OpmValue(*BinaryOp)(const OpmValue&, const OpmValue&);
 
 class ExpressionContext
 {
-	std::map<std::string, OpmNum> m_variables;
+	std::map<std::string, OpmValue> m_variables;
 
 public:
 	ExpressionContext() = default;
-	OpmNum get(const std::string& s) const { return m_variables.at(s); }
-	void set(const OpmNum& val, const std::string& s) { m_variables[s] = val; }
+	OpmValue get(const std::string& s) const { return m_variables.at(s); }
+	void set(const OpmNum& val, const std::string& s) { m_variables[s] = wrap(val); }
+	void set(const OpmComplex& val, const std::string& s) { m_variables[s] = wrap(val); }
 };
 
 class Operation
@@ -26,7 +28,7 @@ class Operation
 	UnaryOp m_unary = nullptr;
 	BinaryOp m_binary = nullptr;
 	std::string m_variable = "";
-	OpmNum m_constant;
+	OpmValue m_constant;
 
 public:
 	std::string m_debug;
@@ -34,7 +36,8 @@ public:
 	explicit Operation(const std::string& var, const std::string& debug) : m_variable(var), m_debug(debug) {}
 	explicit Operation(const UnaryOp op, const std::string& debug = "") : m_unary(op), m_debug(debug) {}
 	explicit Operation(const BinaryOp op, const std::string& debug = "") : m_binary(op), m_debug(debug) {}
-	explicit Operation(const OpmNum& constant, const std::string& debug = "") : m_constant(constant), m_debug(debug) {}
+	explicit Operation(const OpmNum& constant, const std::string& debug = "") : m_constant(wrap(constant)), m_debug(debug) {}
+	explicit Operation(const OpmComplex& constant, const std::string& debug = "") : m_constant(wrap(constant)), m_debug(debug) {}
 
 	void operator()(OpmStack<10>& stack, const ExpressionContext& ctx) const
 	{
@@ -54,7 +57,7 @@ class Expression
 public:
 	void PushOp(const Operation& op) { m_ops.push_back(op); }
 
-	OpmNum operator()(const ExpressionContext& ctx) const
+	OpmValue operator()(const ExpressionContext& ctx) const
 	{
 		OpmStack<10> stack;
 		for (const auto& op : m_ops) op(stack, ctx);

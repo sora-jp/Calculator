@@ -10,13 +10,12 @@ bool cordic_trig(const OpmNum& arg, OpmNum& ox, OpmNum& oy)
 
 	if (arg.isNegative) oy = Constants::pi - oy;
 
-	uint8_t coeffs[DIGITCOUNT];
-	memset(coeffs, 0, DIGITCOUNT);
+	uint8_t coeffs[DIGITCOUNT] = {};
 	PsDiv(oy, Tables::atanTable, coeffs);
 	
 	ox = Constants::one;
 
-	for (uint32_t i = 0; i < DIGITCOUNT; i++)
+	for (int32_t i = 0; i < DIGITCOUNT; i++)
 	{
 		for (auto j = 0; j < coeffs[i]; j++) 
 		{
@@ -30,6 +29,9 @@ bool cordic_trig(const OpmNum& arg, OpmNum& ox, OpmNum& oy)
 			oy = oy + x;
 		}
 	}
+
+	if (ox.exponent <= -DIGITCOUNT) ox = 0e0_opm;
+	if (oy.exponent <= -DIGITCOUNT) oy = 0e0_opm;
 
 	return o & 1;
 }
@@ -57,6 +59,8 @@ OpmNum sin(const OpmNum& arg)
 	const auto t = oy / ox;
 
 	auto o = t / pow(Constants::one + t * t, Constants::one_half);
+	if (is_zero(o)) return 0e0_opm;
+
 	o.isNegative ^= n ^ t.isNegative ^ arg.isNegative;
 
 	return o;
@@ -69,6 +73,8 @@ OpmNum cos(const OpmNum& arg)
 	const auto c = ox / oy;
 
 	auto o = c / pow(Constants::one + c * c, Constants::one_half);
+	if (is_zero(o)) return 0e0_opm;
+
 	o.isNegative ^= n ^ arg.isNegative;
 
 	return o;

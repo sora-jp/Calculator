@@ -48,9 +48,32 @@ public:
 	void* value() const { return m_value; }
 	OpmValue& roundToNearest();
 	OpmValue& normalize();
+	OpmValue& operator=(const OpmValue& other);
+	bool operator==(const OpmValue& other) const;
 };
 
+inline bool OpmValue::operator==(const OpmValue& other) const
+{
+	return other.m_value == m_value && other.m_type == m_type;
+}
 
+inline OpmValue& OpmValue::operator=(const OpmValue& other)
+{
+	if (&other == this) return *this;
+	m_type = other.m_type;
+	m_size = other.m_size;
+	if (other.m_type == ValueType::Invalid) return *this;
+	const auto nv = malloc(m_size);
+	if (nv == nullptr)
+	{
+		m_type = ValueType::Invalid;
+		return *this;
+	}
+	memcpy(nv, other.m_value, m_size);
+	if (m_value) free(m_value);
+	m_value = nv;
+	return *this;
+}
 
 template<typename T, enable_if_opm_type<T> = true>
 OpmValue wrap(const T& value)
@@ -62,6 +85,12 @@ OpmValue wrap(const T& value)
 	}
 	memcpy(ptr, &value, sizeof(T));
 	return OpmValue(ptr, TypeOf<T>, sizeof(T));
+}
+
+inline OpmValue wrap(const OpmComplex& value, bool downcast = true)
+{
+	if (is_zero(value.imag) && downcast) return wrap(value.real);
+	return wrap<OpmComplex>(value);
 }
 
 template<typename T, enable_if_opm_type<std::remove_all_extents_t<T>> = true>

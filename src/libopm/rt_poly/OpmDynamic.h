@@ -28,3 +28,15 @@ DECLARE_DYN_2(operator+);
 DECLARE_DYN_2(operator-);
 DECLARE_DYN_2(operator*);
 DECLARE_DYN_2(operator/);
+
+DECLARE_DYN_1(ln);
+DECLARE_DYN_1(exp);
+DECLARE_DYN_2(pow);
+
+DECLARE_DYN_1(sin);
+DECLARE_DYN_1(cos);
+DECLARE_DYN_1(tan);
+
+DECLARE_DYN_1(sinh);
+DECLARE_DYN_1(cosh);
+DECLARE_DYN_1(tanh);

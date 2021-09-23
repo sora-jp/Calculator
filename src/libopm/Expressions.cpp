@@ -23,8 +23,6 @@ void Tokenize(const std::string& str, std::vector<Token>& outTokens)
 
 	for (char c : str)
 	{
-		if (std::isblank(c)) continue;
-
 		if (curToken.type == TokenType::Identifier)
 		{
 			if (!std::isalpha(c) && !std::isdigit(c))
@@ -38,7 +36,7 @@ void Tokenize(const std::string& str, std::vector<Token>& outTokens)
 
 		if (curToken.type == TokenType::Number)
 		{
-			if (!std::isdigit(c) && c != '.')
+			if (!std::isdigit(c) && c != '.' && c != 'i')
 			{
 				outTokens.push_back(curToken);
 				curToken.type = TokenType::Invalid;
@@ -47,6 +45,7 @@ void Tokenize(const std::string& str, std::vector<Token>& outTokens)
 			else curToken.text += c;
 		}
 
+		if (std::isblank(c)) continue;
 		if (curToken.type == TokenType::Invalid)
 		{
 			if (isop(c)) 
@@ -114,13 +113,14 @@ bool IsLAssoc(const std::string& op)
 	return false;
 }
 
-OpmNum sub(const OpmNum& a, const OpmNum& b) { return a - b; }
-OpmNum neg(const OpmNum& a) { return -a; }
+OpmValue sub(const OpmValue& a, const OpmValue& b) { return a - b; }
+OpmValue neg(const OpmValue& a) { return -a; }
 
 Operation ExpressionParser::ToOp(const Token& token) const
 {
 	if (token.type == TokenType::Number)
 	{
+		if (token.text.back() == 'i') return Operation(OpmComplex(0, parse(token.text.c_str())), token.text);
 		return Operation(parse(token.text.c_str()), token.text);
 	}
 	if (token.type == TokenType::Identifier)
@@ -220,6 +220,7 @@ Expression ExpressionParser::Parse(const std::string& string) const
 			}
 			assert(opStack.back().type == TokenType::LParen);
 			if (token.type != TokenType::Comma) opStack.pop_back();
+			if (opStack.empty()) continue;
 			if (opStack.back().type == TokenType::Identifier || (opStack.back().type == TokenType::Operator && opStack.back().text == "-u"))
 			{
 				out.PushOp(ToOp(opStack.back()));
@@ -234,7 +235,7 @@ Expression ExpressionParser::Parse(const std::string& string) const
 		opStack.pop_back();
 	}
 
-	//out.Print();
+	out.Print();
 
 	return out;
 }
