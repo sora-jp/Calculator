@@ -23,7 +23,8 @@ project "OpmNum"
 	targetdir "bin/calc/%{cfg.buildcfg}"
 	
 	files { "src/libopm/**.h", "src/libopm/**.cpp", "src/libopm/**.hpp", "src/libopm/**.inl" }
-	includedirs { "src/libopm" }
+	includedirs { "src/libopm", "vendor/antlr/src" }
+	links { "Antlr" }
 
 project "Calculator"
 	kind "ConsoleApp"
@@ -43,6 +44,15 @@ project "NTL"
 	
 	files { "vendor/ntl/src/**.cpp" }
 	includedirs { "vendor/ntl/include" }
+	
+project "Antlr"
+	kind "StaticLib"
+	language "C++"
+	cppdialect "C++17"
+	targetdir "bin/antlr/%{cfg.buildcfg}"
+	
+	files { "vendor/antlr/src/**.cpp", "vendor/antlr/src/**.h" }
+	includedirs { "vendor/antlr/src" }
 	
 project "Testbed"
 	kind "ConsoleApp"

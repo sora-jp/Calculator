@@ -14,6 +14,7 @@
 #include "Timing.h"
 #include "cordic/Tables.hpp"
 #include "rt_poly/OpmDynamic.h"
+#include "expr/NExpression.h"
 
 int main(int argc, char** argv)
 {
@@ -23,6 +24,9 @@ int main(int argc, char** argv)
 		const auto res = TestPrecision(argc, argv, exit);
 		if (exit) return res;
 	}
+
+	NExpressionParser nparser;
+	nparser.parse("(4.3 * 0.2) - 2 * 45 + log(-ln(-3 ^ -0.2 + x) / y, -2.4 ^ -3 * 2) + 2 / 3 / 4");
 
 	ExpressionParser parser;
 	parser.RegisterFn("ln", ln);
