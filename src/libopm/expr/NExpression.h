@@ -13,7 +13,7 @@ typedef OpmValue(*UnaryOp)(const OpmValue&);
 
 struct NOperation
 {
-	NOpType type;
+	NOpType type = NOpType::Invalid;
 	std::string payload;
 };
 
@@ -21,9 +21,9 @@ struct NExpressionNode
 {
 	NOperation op;
 
-	NExpressionNode* parent;
-	NExpressionNode* left;
-	NExpressionNode* right;
+	NExpressionNode* parent = nullptr;
+	NExpressionNode* left = nullptr;
+	NExpressionNode* right = nullptr;
 };
 
 struct NExpression

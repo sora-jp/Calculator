@@ -1,21 +1,220 @@
 #include "NExpression.h"
 #include "antlr-gen/InfixLexer.h"
 #include "antlr-gen/InfixParser.h"
-#include "antlr-gen/InfixListener.h"
-#include "antlr-gen/InfixBaseListener.h"
 
 using namespace antlr4;
 
-struct ConversionListener : public InfixBaseListener
+void Convert(InfixParser::ExpressionContext* expr, NExpressionNode* node);
+void Convert(InfixParser::PrimaryContext* primary, NExpressionNode* node)
 {
-	NExpressionNode* curNode;
+	if (auto* c = primary->constant(); c)
+		node->op = NOperation{ NOpType::Constant, c->getText() };
 
-private:
-	void enterExpression(InfixParser::ExpressionContext* ctx) override
+	if (auto* e = primary->expression(); e) 
+		Convert(e, node);
+
+	if (auto* v = primary->variable(); v)
+		node->op = NOperation{ NOpType::Variable, v->getText() };
+
+	if (auto* f = primary->func(); f)
 	{
+		node->op = NOperation{ NOpType::FunctionCall, f->ID()->getText() };
+		auto* p = f->params();
 
+		auto s = p->expression().size();
+		if (s >= 1)
+		{
+			node->left = new NExpressionNode();
+			Convert(p->expression(0), node->left);
+		}
+		if (s >= 2)
+		{
+			node->right = new NExpressionNode();
+			Convert(p->expression(1), node->right);
+		}
 	}
-};
+}
+
+void Convert(InfixParser::FactorContext* factor, NExpressionNode* node);
+void Convert(InfixParser::SecondaryContext* secondary, NExpressionNode* node)
+{
+	auto* opNode = secondary->POW();
+
+	if (opNode)
+	{
+		auto* lhs = new NExpressionNode();
+		auto* rhs = new NExpressionNode();
+
+		node->left = lhs;
+		node->right = rhs;
+		node->op = NOperation{ NOpType::Binary, opNode->getText() };
+
+		Convert(secondary->secondary(), lhs);
+		Convert(secondary->factor(), rhs);
+	}
+	else
+	{
+		Convert(secondary->primary(), node);
+	}
+}
+
+void Convert(InfixParser::FactorContext* factor, NExpressionNode* node)
+{
+	auto* opNode = factor->PLUS();
+	if (!opNode) opNode = factor->MINUS();
+
+	if (opNode)
+	{
+		auto* lhs = new NExpressionNode();
+		
+		node->left = lhs;
+		node->op = NOperation{ NOpType::Unary, opNode->getText() };
+		
+		Convert(factor->factor(), lhs);
+	}
+	else
+	{
+		Convert(factor->secondary(), node);
+	}
+}
+
+void Convert(InfixParser::TermContext* term, NExpressionNode* node)
+{
+	auto* opNode = term->DIV();
+	if (!opNode) opNode = term->MOD();
+	if (!opNode) opNode = term->MULT();
+
+	if (opNode)
+	{
+		auto* lhs = new NExpressionNode();
+		auto* rhs = new NExpressionNode();
+
+		node->left = lhs;
+		node->right = rhs;
+		node->op = NOperation{ NOpType::Binary, opNode->getText() };
+
+		Convert(term->term(), lhs);
+		Convert(term->factor(), rhs);
+	}
+	else
+	{
+		Convert(term->factor(), node);
+	}
+}
+
+void Convert(InfixParser::ExpressionContext* expr, NExpressionNode* node)
+{
+	auto* opNode = expr->PLUS();
+	if (!opNode) opNode = expr->MINUS();
+
+	if (opNode)
+	{
+		auto* lhs = new NExpressionNode();
+		auto* rhs = new NExpressionNode();
+
+		node->left = lhs;
+		node->right = rhs;
+		node->op = NOperation { NOpType::Binary, opNode->getText() };
+
+		Convert(expr->expression(), lhs);
+		Convert(expr->term(), rhs);
+	}
+	else
+	{
+		Convert(expr->term(), node);
+	}
+}
+
+void Convert(InfixParser::EvalContext* topLevel, NExpressionNode& node)
+{
+	Convert(topLevel->expression(), &node);
+}
+
+bool IsConstant(NExpressionNode* node)
+{
+	if (node == nullptr) return true;
+	if (node->op.type == NOpType::Constant) return true;
+	if (node->op.type == NOpType::FunctionCall) return false;
+	if (node->op.type == NOpType::Variable) return false;
+	return IsConstant(node->left) && IsConstant(node->right);
+}
+
+OpmNum ConstantEval(NExpressionNode* node)
+{
+	if (node->op.type == NOpType::Constant)
+	{
+		return parse(node->op.payload.c_str());
+	}
+	if (node->op.type == NOpType::Unary)
+	{
+		auto& p = node->op.payload;
+		if (p == "+") return ConstantEval(node->left);
+		if (p == "-") return -ConstantEval(node->left);
+	}
+	if (node->op.type == NOpType::Binary)
+	{
+		auto& p = node->op.payload;
+		if (p == "+") return ConstantEval(node->left) + ConstantEval(node->right);
+		if (p == "-") return ConstantEval(node->left) - ConstantEval(node->right);
+		if (p == "*") return ConstantEval(node->left) * ConstantEval(node->right);
+		if (p == "/") return ConstantEval(node->left) / ConstantEval(node->right);
+		if (p == "^") return pow(ConstantEval(node->left), ConstantEval(node->right));
+	}
+}
+
+bool ConstantFoldR(NExpressionNode* node)
+{
+	if (node == nullptr) return false;
+
+	bool didFold = false;
+	if (IsConstant(node) && node->op.type != NOpType::Constant)
+	{
+		char c[256] = {};
+		auto n = ConstantEval(node);
+		delete node->left;
+		delete node->right;
+		node->left = node->right = nullptr;
+
+		format(n, c, FormatMode::Standard);
+		node->op = NOperation{ NOpType::Constant, c };
+
+		didFold = true;
+	}
+	if (!didFold)
+	{
+		didFold = ConstantFoldR(node->left) || ConstantFoldR(node->right);
+	}
+
+	return didFold;
+}
+
+void ConstantFoldAll(NExpressionNode* node)
+{
+	while (ConstantFoldR(node));
+}
+
+std::string ToString(const NOpType type)
+{
+	switch (type)
+	{
+	case NOpType::Invalid: return "Invalid";
+	case NOpType::Binary: return "Binary";
+	case NOpType::Unary: return "Unary";
+	case NOpType::Constant: return "Constant";
+	case NOpType::Variable: return "Variable";
+	case NOpType::FunctionCall: return "FunctionCall";
+	}
+}
+
+void Print(NExpressionNode* node, int depth = 0)
+{
+	if (node == nullptr) return;
+	for (auto i = 0; i < depth; i++) std::cout << " ";
+	std::cout << node->op.payload << " (" << ToString(node->op.type) << ")" << std::endl;
+
+	Print(node->left, depth + 1);
+	Print(node->right, depth + 1);
+}
 
 NExpression NExpressionParser::parse(const std::string& in)
 {
@@ -23,13 +222,17 @@ NExpression NExpressionParser::parse(const std::string& in)
 	InfixLexer lexer(&stream);
 	CommonTokenStream tokens(&lexer);
 	InfixParser parser(&tokens);
-
-	ConversionListener list;
+	
 	NExpression expr;
-	list.curNode = &expr.top;
+	
+	auto* top = parser.eval();
+	Convert(top, expr.top);
+	std::cout << in << std::endl;
+	Print(&expr.top);
 
-	tree::ParseTree* top = parser.eval();
-	tree::ParseTreeWalker::DEFAULT.walk(&list, top);
+	std::cout << "AFTER CONSTANT FOLDING" << std::endl;
+	ConstantFoldAll(&expr.top);
+	Print(&expr.top);
 
 	return expr;
 }
