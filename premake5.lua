@@ -22,7 +22,7 @@ project "OpmNum"
 	cppdialect "C++17"
 	targetdir "bin/calc/%{cfg.buildcfg}"
 	
-	files { "src/libopm/**.h", "src/libopm/**.cpp", "src/libopm/**.hpp", "src/libopm/**.inl" }
+	files { "src/libopm/**.h", "src/libopm/**.cpp", "src/libopm/**.hpp", "src/libopm/**.inl", "src/libopm/**.natvis" }
 	includedirs { "src/libopm", "vendor/antlr/src" }
 	links { "Antlr" }
 
@@ -54,6 +54,7 @@ project "Antlr"
 	files { "vendor/antlr/src/**.cpp", "vendor/antlr/src/**.h" }
 	includedirs { "vendor/antlr/src" }
 	
+--[[
 project "Testbed"
 	kind "ConsoleApp"
 	language "C++"
@@ -69,4 +70,4 @@ project "Testbed"
 		links { "vendor/mahi/Debug/*.lib" }
 	
 	filter "configurations:Release"
-		links { "vendor/mahi/Release/*.lib" }
+		links { "vendor/mahi/Release/*.lib" } ]]--

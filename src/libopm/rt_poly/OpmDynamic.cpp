@@ -35,3 +35,10 @@ IMPL_DYN_1(tan);
 IMPL_DYN_1(sinh);
 IMPL_DYN_1(cosh);
 IMPL_DYN_1(tanh);
+
+int format(const OpmValue& value, char* buffer, FormatMode mode)
+{
+	if (value.type() == ValueType::Real) return format(*unwrap<OpmNum>(value), buffer, mode);
+	if (value.type() == ValueType::Complex) return format(*unwrap<OpmComplex>(value), buffer, mode);
+	return -1;
+}

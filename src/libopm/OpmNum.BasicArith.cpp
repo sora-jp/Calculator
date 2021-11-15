@@ -57,6 +57,9 @@ OpmNum operator-(const OpmNum& a, const OpmNum& b)
 
 OpmNum operator*(const OpmNum& a, const OpmNum& b)
 {
+    if (is_zero(a)) return a;
+    if (is_zero(b)) return b;
+
     OpmNum out;
     out.exponent   = a.exponent   + b.exponent;
     out.isNegative = a.isNegative ^ b.isNegative;

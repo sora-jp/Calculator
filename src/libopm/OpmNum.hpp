@@ -44,6 +44,7 @@ public:
 	
     OpmNum& roundToNearest();
     OpmNum& normalize();
+	std::string debug_fmt() const;
 };
 
 template<uint32_t n, uint32_t t0> constexpr void copy(OpmNum& o)

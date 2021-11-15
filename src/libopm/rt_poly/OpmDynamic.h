@@ -40,3 +40,5 @@ DECLARE_DYN_1(tan);
 DECLARE_DYN_1(sinh);
 DECLARE_DYN_1(cosh);
 DECLARE_DYN_1(tanh);
+
+int format(const OpmValue& value, char* buffer, FormatMode mode);

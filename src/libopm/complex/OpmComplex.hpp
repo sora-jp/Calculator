@@ -50,3 +50,5 @@ OpmComplex tan(const OpmComplex& a);
 OpmComplex sinh(const OpmComplex& a);
 OpmComplex cosh(const OpmComplex& a);
 OpmComplex tanh(const OpmComplex& a);
+
+int format(const OpmComplex& num, char* buffer, FormatMode mode);

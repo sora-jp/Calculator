@@ -13,6 +13,10 @@ OpmNum atan2(const OpmNum& x, const OpmNum& y)
 		if (is_zero(y)) return 0e0_opm;
 		return y.isNegative ? -Constants::half_pi : Constants::half_pi;
 	}
+	if (is_zero(y))
+	{
+		return x.isNegative ? Constants::pi : 0e0_opm;
+	}
 
 	const bool neg = x.isNegative ^ y.isNegative;
 

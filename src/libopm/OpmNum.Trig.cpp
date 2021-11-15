@@ -56,6 +56,8 @@ OpmNum sin(const OpmNum& arg)
 {
 	OpmNum ox, oy;
 	const auto n = cordic_trig(arg, ox, oy);
+	if (is_zero(ox)) return oy.isNegative ? -1e0_opm : 1e0_opm;
+
 	const auto t = oy / ox;
 
 	auto o = t / pow(Constants::one + t * t, Constants::one_half);
@@ -70,6 +72,8 @@ OpmNum cos(const OpmNum& arg)
 {
 	OpmNum ox, oy;
 	const auto n = cordic_trig(arg, ox, oy);
+	if (is_zero(oy)) return ox.isNegative ? 1e0_opm : -1e0_opm;
+
 	const auto c = ox / oy;
 
 	auto o = c / pow(Constants::one + c * c, Constants::one_half);

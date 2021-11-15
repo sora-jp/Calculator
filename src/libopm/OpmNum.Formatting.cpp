@@ -50,7 +50,7 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 				}
 			}
 
-			return 0;
+			return len + (num.isNegative ? 1 : 0);
 		}
 	}
 	
@@ -70,10 +70,9 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 		buffer[1] = '.';
 
 		int len = getCutoffIdx(num);
-		if (len == 0)
+		if (len <= 1)
 		{
-			len = -1;
-			buffer[1] = ' ';
+			len = 0;
 		}
 		
 		for (int i = 1; i <= len; i++)
@@ -89,15 +88,22 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 			buffer[len + 4] = '1';
 			buffer[len + 5] = '0';
 			buffer[len + 6] = '^';
-			sprintf(&buffer[len + 7], "%d", num.exponent);
+			return sprintf(&buffer[len + 7], "%d", num.exponent) + len + 7 + (num.isNegative ? 1 : 0);
 		}
 		else
 		{
 			buffer[len + 1] = 'e';
-			sprintf(&buffer[len + 2], "%d", num.exponent);
+			return sprintf(&buffer[len + 2], "%d", num.exponent) + len + 2 + (num.isNegative ? 1 : 0);
 		}
 		return 0;
 	}
 
 	return -1;
+}
+
+std::string OpmNum::debug_fmt() const
+{
+	char buf[256] = {};
+	format(*this, buf, FormatMode::DebugRaw);
+	return std::string(buf);
 }
