@@ -24,32 +24,24 @@ int main(int argc, char** argv)
 		if (exit) return res;
 	}
 
-	auto a = wrap<OpmComplex>(-2e0_opm);
-	auto b = wrap<OpmComplex>(5e-1_opm);
-	auto r = pow(a, b).roundToNearest();
+	NExpressionParser nparser;
+	nparser.registerFn("ln", ln);
+	nparser.registerFn("exp", exp);
+	nparser.registerFn("pow", pow);
+	nparser.registerFn("sin", sin);
+	nparser.registerFn("cos", cos);
+	nparser.registerFn("tan", tan);
 
-	char str[256] = {};
-	format(unwrap<OpmComplex>(r)->imag, str, FormatMode::Scientific);
-	std::cout << str << std::endl;
+	auto expr2 = nparser.parse("x * ((-2)^(0.5))");
+	auto cmp = nparser.compile(expr2);
 
-	//NExpressionParser nparser;
-	//nparser.registerFn("ln", ln);
-	//nparser.registerFn("exp", exp);
-	//nparser.registerFn("pow", pow);
-	//nparser.registerFn("sin", sin);
-	//nparser.registerFn("cos", cos);
-	//nparser.registerFn("tan", tan);
+	auto ctx2 = NExpressionContext();
+	ctx2.set(5e1_opm, "x");
 
-	//auto expr2 = nparser.parse("x * ((-2)^(0.5))");
-	//auto cmp = nparser.compile(expr2);
-
-	//auto ctx2 = NExpressionContext();
-	//ctx2.set(5e1_opm, "x");
-
-	//auto res2 = cmp.exec(ctx2);
-	//char str2[256] = {};
-	//format(res2, str2, FormatMode::Standard);
-	//std::cout << str2 << std::endl;
+	auto res2 = cmp.exec(ctx2);
+	char str2[256] = {};
+	format(res2, str2, FormatMode::Standard);
+	std::cout << str2 << std::endl;
 
 	//ExpressionParser parser;
 	//parser.RegisterFn("ln", ln);
