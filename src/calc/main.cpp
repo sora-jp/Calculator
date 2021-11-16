@@ -32,11 +32,11 @@ int main(int argc, char** argv)
 	nparser.registerFn("cos", cos);
 	nparser.registerFn("tan", tan);
 
-	auto expr2 = nparser.parse("x * ((-2)^(0.5))");
+	auto expr2 = nparser.parse("pow(pow(2, 8), x)");
 	auto cmp = nparser.compile(expr2);
 
 	auto ctx2 = NExpressionContext();
-	ctx2.set(5e1_opm, "x");
+	ctx2.set(8e0_opm, "x");
 
 	auto res2 = cmp.exec(ctx2);
 	char str2[256] = {};

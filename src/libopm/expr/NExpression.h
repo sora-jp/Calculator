@@ -19,35 +19,12 @@ typedef OpmValue(*UnaryOp)(const OpmValue&);
 struct NOperation
 {
 	NOpType type = NOpType::Invalid;
-	union {
-		std::string payload = {};
-		OpmValue constant;
-	};
+	std::string payload = {};
+	OpmValue constant;
 
-	NOperation() : payload() {}
-	~NOperation()
-	{
-		if (type == NOpType::Constant) constant.~OpmValue();
-		else payload.~basic_string();
-	}
-
+	NOperation() = default;
 	NOperation(NOpType type, const std::string& payload) : type(type), payload(payload) {}
 	NOperation(NOpType type, const OpmValue& constant) : type(type), constant(constant) {}
-
-	NOperation(const NOperation& other)
-	{
-		type = other.type;
-		if (type == NOpType::Constant) constant = other.constant;
-		else payload = other.payload;
-	}
-
-	NOperation& operator=(const NOperation& other)
-	{
-		type = other.type;
-		if (type == NOpType::Constant) constant = other.constant;
-		else payload = other.payload;
-		return *this;
-	}
 };
 
 class NExpressionContext
@@ -126,6 +103,9 @@ class NExpressionParser
 	std::unordered_map<std::string, BinaryOp> m_binary;
 
 	void compileRecursive(std::vector<NCompiledOp>& ops, const NExpressionNode* node);
+	OpmValue ConstantEval(NExpressionNode* node);
+	bool ConstantFoldR(NExpressionNode* node);
+	void ConstantFoldAll(NExpressionNode* node);
 
 public:
 	NExpressionParser();

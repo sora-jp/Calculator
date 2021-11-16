@@ -139,7 +139,7 @@ bool IsConstant(NExpressionNode* node)
 	return IsConstant(node->left) && IsConstant(node->right);
 }
 
-OpmValue ConstantEval(NExpressionNode* node)
+OpmValue NExpressionParser::ConstantEval(NExpressionNode* node)
 {
 	if (node->op.type == NOpType::Constant)
 	{
@@ -160,9 +160,17 @@ OpmValue ConstantEval(NExpressionNode* node)
 		if (p == "/") return ConstantEval(node->left) / ConstantEval(node->right);
 		if (p == "^") return pow(ConstantEval(node->left), ConstantEval(node->right));
 	}
+	if (node->op.type == NOpType::FunctionCall)
+	{
+		auto& p = node->op.payload;
+		if (m_unary.find(p) != m_unary.end()) return m_unary[p](ConstantEval(node->left));
+		if (m_binary.find(p) != m_binary.end()) return m_binary[p](ConstantEval(node->left), ConstantEval(node->right));
+	}
+
+	return OpmValue {};
 }
 
-bool ConstantFoldR(NExpressionNode* node)
+bool NExpressionParser::ConstantFoldR(NExpressionNode* node)
 {
 	if (node == nullptr) return false;
 
@@ -186,7 +194,7 @@ bool ConstantFoldR(NExpressionNode* node)
 	return didFold;
 }
 
-void ConstantFoldAll(NExpressionNode* node)
+void NExpressionParser::ConstantFoldAll(NExpressionNode* node)
 {
 	while (ConstantFoldR(node));
 }
@@ -245,8 +253,8 @@ NExpression NExpressionParser::parse(const std::string& in)
 void NExpressionParser::compileRecursive(std::vector<NCompiledOp>& ops, const NExpressionNode* node)
 {
 	if (node == nullptr) return;
-	compileRecursive(ops, node->right);
 	compileRecursive(ops, node->left);
+	compileRecursive(ops, node->right);
 
 	if (node->op.type == NOpType::Constant) ops.emplace_back(node->op.constant);
 	if (node->op.type == NOpType::Variable) ops.emplace_back(node->op.payload);
