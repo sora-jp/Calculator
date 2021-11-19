@@ -31,7 +31,7 @@ class OpmValue
 public:
 	constexpr OpmValue() : m_type(ValueType::Invalid), m_size(0), m_value(nullptr) {}
 	constexpr OpmValue(void* value, const ValueType type, const size_t size) : m_type(type), m_size(size), m_value(value) {}
-	constexpr OpmValue(const OpmValue& other) : m_type(other.m_type), m_size(other.m_size), m_value(nullptr)
+	OpmValue(const OpmValue& other) : m_type(other.m_type), m_size(other.m_size), m_value(nullptr)
 	{
 		if (other.m_type == ValueType::Invalid) return;
 		m_value = malloc(m_size);
@@ -42,6 +42,13 @@ public:
 		}
 		memcpy(m_value, other.m_value, m_size);
 	}
+	OpmValue(OpmValue&& other) noexcept : m_type(other.m_type), m_size(other.m_size), m_value(other.m_value)
+	{
+		other.m_type = ValueType::Invalid;
+		other.m_size = 0;
+		other.m_value = nullptr;
+	}
+
 	~OpmValue() { if (m_value) free(m_value); }
 
 	ValueType type() const { return m_type; }
@@ -49,6 +56,7 @@ public:
 	OpmValue& roundToNearest();
 	OpmValue& normalize();
 	OpmValue& operator=(const OpmValue& other);
+	OpmValue& operator=(OpmValue&& other) noexcept;
 	bool operator==(const OpmValue& other) const;
 };
 
@@ -76,18 +84,18 @@ inline OpmValue& OpmValue::operator=(const OpmValue& other)
 }
 
 template<typename T, enable_if_opm_type<T> = true>
-OpmValue wrap(const T& value)
+OpmValue&& wrap(const T& value)
 {
 	const auto ptr = malloc(sizeof(T));
 	if (ptr == nullptr)
 	{
-		return OpmValue();
+		return std::move(OpmValue());
 	}
 	memcpy(ptr, &value, sizeof(T));
-	return OpmValue(ptr, TypeOf<T>, sizeof(T));
+	return std::move(OpmValue(ptr, TypeOf<T>, sizeof(T)));
 }
 
-inline OpmValue wrap(const OpmComplex& value, bool downcast = true)
+inline OpmValue&& wrap(const OpmComplex& value, bool downcast = true)
 {
 	if (is_zero(value.imag) && downcast) return wrap(value.real);
 	return wrap<OpmComplex>(value);

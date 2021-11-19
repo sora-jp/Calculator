@@ -12,6 +12,7 @@
 #include "OpmRand.hpp"
 #include "Timing.h"
 #include "cordic/Tables.hpp"
+#include "expr/NDerivative.h"
 #include "rt_poly/OpmDynamic.h"
 #include "expr/NExpression.h"
 
@@ -32,16 +33,23 @@ int main(int argc, char** argv)
 	nparser.registerFn("cos", cos);
 	nparser.registerFn("tan", tan);
 
-	auto expr2 = nparser.parse("pow(pow(2, 8), x)");
-	auto cmp = nparser.compile(expr2);
+	for (size_t i = 0; i < 100000; i++) {
+		auto expr2 = nparser.parse("x ^ x");
+		auto cmp = nparser.compile(expr2);
+		NDerivativeRewriter rw;
+		auto expr3 = nparser.rewrite(rw, expr2);
+	}
 
-	auto ctx2 = NExpressionContext();
-	ctx2.set(8e0_opm, "x");
+	//std::cout << std::endl << "AFTER REWRITE" << std::endl;
+	////NExpressionParser::Print(expr3);
 
-	auto res2 = cmp.exec(ctx2);
-	char str2[256] = {};
-	format(res2, str2, FormatMode::Standard);
-	std::cout << str2 << std::endl;
+	//auto ctx2 = NExpressionContext();
+	//ctx2.set(8e0_opm, "x");
+
+	//auto res2 = cmp.exec(ctx2);
+	//char str2[256] = {};
+	//format(res2, str2, FormatMode::Standard);
+	//std::cout << str2 << std::endl;
 
 	//ExpressionParser parser;
 	//parser.RegisterFn("ln", ln);

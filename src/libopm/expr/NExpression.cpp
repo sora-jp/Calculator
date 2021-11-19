@@ -47,7 +47,7 @@ void Convert(InfixParser::SecondaryContext* secondary, NExpressionNode* node)
 
 		node->left = lhs;
 		node->right = rhs;
-		node->op = NOperation{ NOpType::Binary, opNode->getText() };
+		node->op = NOperation{ NOpType::FunctionCall, "pow" };
 
 		Convert(secondary->secondary(), lhs);
 		Convert(secondary->factor(), rhs);
@@ -125,12 +125,12 @@ void Convert(InfixParser::ExpressionContext* expr, NExpressionNode* node)
 	}
 }
 
-void Convert(InfixParser::EvalContext* topLevel, NExpressionNode& node)
+void Convert(InfixParser::EvalContext* topLevel, NExpressionNode* node)
 {
-	Convert(topLevel->expression(), &node);
+	Convert(topLevel->expression(), node);
 }
 
-bool IsConstant(NExpressionNode* node)
+bool NExpressionParser::IsConstant(const NExpressionNode* node)
 {
 	if (node == nullptr) return true;
 	if (node->op.type == NOpType::Constant) return true;
@@ -177,7 +177,7 @@ bool NExpressionParser::ConstantFoldR(NExpressionNode* node)
 	bool didFold = false;
 	if (IsConstant(node) && node->op.type != NOpType::Constant)
 	{
-		auto n = ConstantEval(node);
+		auto n = ConstantEval(node).roundToNearest();
 		delete node->left;
 		delete node->right;
 		node->left = node->right = nullptr;
@@ -212,21 +212,67 @@ std::string ToString(const NOpType type)
 	}
 }
 
-void Print(NExpressionNode* node, int depth = 0)
+int precedence(const NOperation& op)
+{
+	if (op.type == NOpType::Binary)
+	{
+		if (op.payload == "+") return 1;
+		if (op.payload == "-") return 1;
+		if (op.payload == "*") return 2;
+		if (op.payload == "/") return 2;
+		if (op.payload == "^") return 3;
+	}
+	if (op.type == NOpType::Unary && op.payload == "-") return 4;
+	if (op.type == NOpType::FunctionCall && op.payload == "pow") return 3;
+	return -1;
+}
+
+void Print(const NExpressionNode* node, int lastPrec = 0)
 {
 	if (node == nullptr) return;
-	for (auto i = 0; i < depth; i++) std::cout << " ";
+	auto prec = precedence(node->op);
+	bool paren = prec < lastPrec && lastPrec != -1 && prec != -1;
+	if (paren) std::cout << "(";
 
-	if (node->op.type != NOpType::Constant) std::cout << node->op.payload << " (" << ToString(node->op.type) << ")" << std::endl;
-	else
+	if (node->op.type == NOpType::Unary)
 	{
-		char s[256] = {};
-		format(node->op.constant, s, FormatMode::Standard);
-		std::cout << s << " (Constant)" << std::endl;
+		std::cout << node->op.payload;
+		Print(node->left, prec);
+	}
+	if (node->op.type == NOpType::Binary || (node->op.type == NOpType::FunctionCall && node->op.payload == "pow"))
+	{
+		auto p = node->op.payload;
+		if (p == "pow") p = "^";
+		Print(node->left, prec);
+		std::cout << " " << p << " ";
+		Print(node->right, prec);
+	}
+	if (node->op.type == NOpType::Variable) std::cout << node->op.payload;
+	if (node->op.type == NOpType::Constant)
+	{
+		char buf[256] = {};
+		format(node->op.constant, buf, FormatMode::Standard);
+		std::cout << buf;
+	}
+	if (node->op.type == NOpType::FunctionCall && node->op.payload != "pow")
+	{
+		std::cout << node->op.payload << "(";
+		Print(node->left, prec);
+		if (node->right)
+		{
+			std::cout << ", ";
+			Print(node->right, prec);
+		}
+		std::cout << ")";
 	}
 
-	Print(node->left, depth + 1);
-	Print(node->right, depth + 1);
+	if (paren) std::cout << ")";
+}
+
+void NExpressionParser::Print(const NExpression& expr)
+{
+	::Print(expr.top);
+	std::cout << std::endl;
 }
 
 NExpression NExpressionParser::parse(const std::string& in)
@@ -236,18 +282,26 @@ NExpression NExpressionParser::parse(const std::string& in)
 	CommonTokenStream tokens(&lexer);
 	InfixParser parser(&tokens);
 	
-	NExpression expr;
+	NExpression expr = { new NExpressionNode() };
 	
 	auto* top = parser.eval();
 	Convert(top, expr.top);
-	std::cout << in << std::endl;
-	Print(&expr.top);
+	//std::cout << in << std::endl;
+	//Print(expr);
 
-	std::cout << "AFTER CONSTANT FOLDING" << std::endl;
-	ConstantFoldAll(&expr.top);
-	Print(&expr.top);
+	//std::cout << "AFTER CONSTANT FOLDING" << std::endl;
+	ConstantFoldAll(expr.top);
+	//Print(expr);
 
 	return expr;
+}
+
+NExpression NExpressionParser::rewrite(NExpressionRewriter& rew, const NExpression& expr)
+{
+	NExpression output = {nullptr};
+	output.top = rew.rewrite(expr.top);
+	ConstantFoldAll(output.top);
+	return output;
 }
 
 void NExpressionParser::compileRecursive(std::vector<NCompiledOp>& ops, const NExpressionNode* node)
@@ -285,6 +339,6 @@ NExpressionParser::NExpressionParser()
 NCompiledExpression NExpressionParser::compile(const NExpression& expr)
 {
 	NCompiledExpression out;
-	compileRecursive(out.m_ops, &expr.top);
+	compileRecursive(out.m_ops, expr.top);
 	return out;
 }

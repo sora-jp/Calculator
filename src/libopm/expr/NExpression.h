@@ -2,30 +2,12 @@
 #include <map>
 
 #include "../rt_poly/OpmDynamic.h"
+#include "NExpressionNode.h"
 #include <string>
 #include <vector>
 
 #include "StackBindings.hpp"
 #define EXPR_STACK_DEPTH 16
-
-enum class NOpType
-{
-	Invalid, Binary, Unary, Constant, Variable, FunctionCall
-};
-
-typedef OpmValue(*BinaryOp)(const OpmValue&, const OpmValue&);
-typedef OpmValue(*UnaryOp)(const OpmValue&);
-
-struct NOperation
-{
-	NOpType type = NOpType::Invalid;
-	std::string payload = {};
-	OpmValue constant;
-
-	NOperation() = default;
-	NOperation(NOpType type, const std::string& payload) : type(type), payload(payload) {}
-	NOperation(NOpType type, const OpmValue& constant) : type(type), constant(constant) {}
-};
 
 class NExpressionContext
 {
@@ -65,19 +47,6 @@ struct NCompiledOp
 	}
 };
 
-struct NExpressionNode
-{
-	NOperation op;
-
-	NExpressionNode* parent = nullptr;
-	NExpressionNode* left = nullptr;
-	NExpressionNode* right = nullptr;
-};
-
-struct NExpression
-{
-	NExpressionNode top;
-};
 
 class NCompiledExpression
 {
@@ -97,6 +66,14 @@ public:
 	}
 };
 
+class NExpressionRewriter
+{
+	friend class NExpressionParser;
+public:
+	virtual ~NExpressionRewriter() = default;
+	virtual NExpressionNode* rewrite(const NExpressionNode* node) = 0;
+};
+
 class NExpressionParser
 {
 	std::unordered_map<std::string, UnaryOp> m_unary;
@@ -113,5 +90,9 @@ public:
 	void registerFn(const std::string& name, BinaryOp val) { m_binary[name] = val; }
 
 	NExpression parse(const std::string& in);
+	NExpression rewrite(NExpressionRewriter& rew, const NExpression& expr);
 	NCompiledExpression compile(const NExpression& expr);
+
+	static bool IsConstant(const NExpressionNode* node);
+	static void Print(const NExpression& expr);
 };
