@@ -17,6 +17,30 @@ struct NOperation
 	NOperation() = default;
 	NOperation(NOpType type, const std::string& payload) : type(type), payload(payload) {}
 	NOperation(NOpType type, OpmValue constant) : type(type), constant(std::move(constant)) {}
+
+	NOperation(const NOperation& other) : type(other.type), payload(other.payload), constant(other.constant) {}
+	NOperation(NOperation&& other) noexcept : type(other.type), payload(std::move(other.payload)), constant(std::move(other.constant))
+	{
+		other.type = NOpType::Invalid;
+	}
+
+	NOperation& operator=(const NOperation& other)
+	{
+		type = other.type;
+		payload = other.payload;
+		constant = other.constant;
+		return *this;
+	}
+
+	NOperation& operator=(NOperation&& other)
+	{
+		type = other.type;
+		payload = std::move(other.payload);
+		constant = std::move(other.constant);
+
+		other.type = NOpType::Invalid;
+		return *this;
+	}
 };
 
 struct NExpressionNode

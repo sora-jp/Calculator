@@ -33,12 +33,23 @@ int main(int argc, char** argv)
 	nparser.registerFn("cos", cos);
 	nparser.registerFn("tan", tan);
 
-	for (size_t i = 0; i < 100000; i++) {
-		auto expr2 = nparser.parse("x ^ x");
-		auto cmp = nparser.compile(expr2);
-		NDerivativeRewriter rw;
-		auto expr3 = nparser.rewrite(rw, expr2);
-	}
+	NExpressionContext ctx;
+	ctx.set(5e0_opm, "k");
+	ctx.set(5e0_opm, "x");
+
+	NDerivativeRewriter rw;
+
+	auto expr2 = nparser.parse("x)z");
+	auto expr3 = nparser.rewrite(rw, expr2);
+	auto cmp = nparser.compile(expr3);
+	auto res = cmp.exec(ctx);
+
+	NExpressionParser::Print(expr2);
+	NExpressionParser::Print(expr3);
+
+	char str[256] = {};
+	format(res, str, FormatMode::Standard);
+	std::cout << str << std::endl;
 
 	//std::cout << std::endl << "AFTER REWRITE" << std::endl;
 	////NExpressionParser::Print(expr3);

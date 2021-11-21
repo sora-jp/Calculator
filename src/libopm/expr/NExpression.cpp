@@ -283,8 +283,8 @@ NExpression NExpressionParser::parse(const std::string& in)
 	InfixParser parser(&tokens);
 	
 	NExpression expr = { new NExpressionNode() };
-	
 	auto* top = parser.eval();
+
 	Convert(top, expr.top);
 	//std::cout << in << std::endl;
 	//Print(expr);

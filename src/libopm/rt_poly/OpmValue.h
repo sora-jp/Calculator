@@ -31,6 +31,7 @@ class OpmValue
 public:
 	constexpr OpmValue() : m_type(ValueType::Invalid), m_size(0), m_value(nullptr) {}
 	constexpr OpmValue(void* value, const ValueType type, const size_t size) : m_type(type), m_size(size), m_value(value) {}
+
 	OpmValue(const OpmValue& other) : m_type(other.m_type), m_size(other.m_size), m_value(nullptr)
 	{
 		if (other.m_type == ValueType::Invalid) return;
@@ -42,6 +43,7 @@ public:
 		}
 		memcpy(m_value, other.m_value, m_size);
 	}
+
 	OpmValue(OpmValue&& other) noexcept : m_type(other.m_type), m_size(other.m_size), m_value(other.m_value)
 	{
 		other.m_type = ValueType::Invalid;
@@ -84,18 +86,18 @@ inline OpmValue& OpmValue::operator=(const OpmValue& other)
 }
 
 template<typename T, enable_if_opm_type<T> = true>
-OpmValue&& wrap(const T& value)
+OpmValue wrap(const T& value)
 {
 	const auto ptr = malloc(sizeof(T));
 	if (ptr == nullptr)
 	{
-		return std::move(OpmValue());
+		return (OpmValue());
 	}
 	memcpy(ptr, &value, sizeof(T));
-	return std::move(OpmValue(ptr, TypeOf<T>, sizeof(T)));
+	return (OpmValue(ptr, TypeOf<T>, sizeof(T)));
 }
 
-inline OpmValue&& wrap(const OpmComplex& value, bool downcast = true)
+inline OpmValue wrap(const OpmComplex& value, bool downcast = true)
 {
 	if (is_zero(value.imag) && downcast) return wrap(value.real);
 	return wrap<OpmComplex>(value);
