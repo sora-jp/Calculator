@@ -12,9 +12,11 @@
 #include "OpmRand.hpp"
 #include "Timing.h"
 #include "cordic/Tables.hpp"
+#include "expr/Expressions.h"
 #include "expr/NDerivative.h"
 #include "rt_poly/OpmDynamic.h"
 #include "expr/NExpression.h"
+#include "expr/NSimplify.h"
 
 int main(int argc, char** argv)
 {
@@ -25,31 +27,21 @@ int main(int argc, char** argv)
 		if (exit) return res;
 	}
 
-	NExpressionParser nparser;
-	nparser.registerFn("ln", ln);
-	nparser.registerFn("exp", exp);
-	nparser.registerFn("pow", pow);
-	nparser.registerFn("sin", sin);
-	nparser.registerFn("cos", cos);
-	nparser.registerFn("tan", tan);
-
 	NExpressionContext ctx;
 	ctx.set(5e0_opm, "k");
 	ctx.set(5e0_opm, "x");
 
-	NDerivativeRewriter rw;
-
-	auto expr2 = nparser.parse("x)z");
-	auto expr3 = nparser.rewrite(rw, expr2);
-	auto cmp = nparser.compile(expr3);
-	auto res = cmp.exec(ctx);
+	auto expr2 = Expression::parse("1 + 2 + x - (3 + x - 5)");
+	auto expr3 = Expression::rewrite<NSimplify>(expr2);
+	auto cmp = Expression::compile(expr3);
+	//auto res = cmp.exec(ctx);
 
 	NExpressionParser::Print(expr2);
 	NExpressionParser::Print(expr3);
 
-	char str[256] = {};
-	format(res, str, FormatMode::Standard);
-	std::cout << str << std::endl;
+	//char str[256] = {};
+	//format(res, str, FormatMode::Standard);
+	//std::cout << str << std::endl;
 
 	//std::cout << std::endl << "AFTER REWRITE" << std::endl;
 	////NExpressionParser::Print(expr3);

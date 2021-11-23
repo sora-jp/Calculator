@@ -20,6 +20,23 @@ inline int getCutoffIdx(const OpmNum& num)
 
 int format(const OpmNum& num, char* buffer, FormatMode mode)
 {
+	if (is_nan(num))
+	{
+		strncpy(buffer, "NaN", 4);
+		return 4;
+	}
+
+	if (is_inf(num))
+	{
+		if (num.isNegative)
+		{
+			buffer[0] = '-';
+			buffer++;
+		}
+		strncpy(buffer, "Infinity", sizeof("Infinity"));
+		return sizeof("Infinity") + (num.isNegative ? 1 : 0);
+	}
+
 	if (mode == FormatMode::Standard)
 	{
 		if (num.exponent > FIXED_MAX_EXP || num.exponent < FIXED_MIN_EXP) mode = FormatMode::Scientific;

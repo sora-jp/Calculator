@@ -31,6 +31,7 @@ public:
 inline OpmComplex conjugate(const OpmComplex& a) { return a.conjugate(); }
 inline OpmNum magnitude(const OpmComplex& a) { return a.magnitude(); }
 inline OpmNum argument(const OpmComplex& a) { return a.argument(); }
+inline bool is_zero(const OpmComplex& a) { return is_zero(a.real) && is_zero(a.imag); }
 
 OpmComplex operator+(const OpmComplex& a, const OpmComplex& b);
 OpmComplex operator-(const OpmComplex& a);
@@ -43,9 +44,15 @@ OpmComplex exp(const OpmComplex& a);
 OpmComplex ln(const OpmComplex& a);
 OpmComplex pow(const OpmComplex& a, const OpmComplex& b);
 
+OpmComplex sqrt(const OpmComplex& a);
+
 OpmComplex sin(const OpmComplex& a);
 OpmComplex cos(const OpmComplex& a);
 OpmComplex tan(const OpmComplex& a);
+
+OpmComplex asin(const OpmComplex& a);
+OpmComplex acos(const OpmComplex& a);
+OpmComplex atan(const OpmComplex& a);
 
 OpmComplex sinh(const OpmComplex& a);
 OpmComplex cosh(const OpmComplex& a);

@@ -58,11 +58,13 @@ OpmNum atan(const OpmNum& arg)
 
 OpmNum asin(const OpmNum& arg)
 {
+	if (abs(arg) > 1e0_opm) return Constants::nan;
 	const auto term = arg.exponent <= -36 ? Constants::one - Constants::one_half * arg * arg : pow(Constants::one - arg * arg, Constants::one_half);
 	return atan(arg / term);
 }
 
 OpmNum acos(const OpmNum& arg)
 {
+	if (abs(arg) > 1e0_opm) return Constants::nan;
 	return Constants::half_pi - asin(arg);
 }

@@ -21,6 +21,8 @@
 		return OpmValue(); \
 	}
 
+bool is_zero(const OpmValue& value);
+
 DECLARE_DYN_1(invert);
 DECLARE_DYN_1(operator-);
 
@@ -30,7 +32,9 @@ DECLARE_DYN_2(operator*);
 DECLARE_DYN_2(operator/);
 
 DECLARE_DYN_1(ln);
+DECLARE_DYN_2(log);
 DECLARE_DYN_1(exp);
+DECLARE_DYN_1(sqrt);
 DECLARE_DYN_2(pow);
 
 DECLARE_DYN_1(sin);
@@ -40,5 +44,9 @@ DECLARE_DYN_1(tan);
 DECLARE_DYN_1(sinh);
 DECLARE_DYN_1(cosh);
 DECLARE_DYN_1(tanh);
+
+DECLARE_DYN_1(asin);
+DECLARE_DYN_1(acos);
+DECLARE_DYN_1(atan);
 
 int format(const OpmValue& value, char* buffer, FormatMode mode);

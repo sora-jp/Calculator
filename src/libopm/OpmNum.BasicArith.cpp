@@ -2,11 +2,15 @@
 #include "Utils.hpp"
 #include "cordic/Tables.hpp"
 
-const uint32_t TC = 0x99999999;
+constexpr uint32_t TC = 0x99999999;
 OpmNum operator+(const OpmNum& a, const OpmNum& b)
 {
     if (a.exponent < b.exponent) return b + a;
 
+    if (is_nan(a) || is_nan(b)) return Constants::nan;
+    if (is_inf(a) && is_inf(b) && (a.isNegative ^ b.isNegative)) return Constants::nan;
+    if (is_inf(a)) return a;
+    if (is_inf(b)) return b;
 	if (is_zero(b)) return a;
     if (is_zero(a)) return b;
 
@@ -45,6 +49,8 @@ OpmNum operator+(const OpmNum& a, const OpmNum& b)
 
 OpmNum operator-(const OpmNum& a)
 {
+    if (is_nan(a)) return a;
+
     OpmNum out(a);
     out.isNegative = !out.isNegative;
     return out;
@@ -57,6 +63,9 @@ OpmNum operator-(const OpmNum& a, const OpmNum& b)
 
 OpmNum operator*(const OpmNum& a, const OpmNum& b)
 {
+    if (is_nan(a) || is_nan(b)) return Constants::nan;
+    if (is_inf(a) || is_inf(b)) return b.isNegative ^ a.isNegative ? Constants::ninf : Constants::inf;
+
     if (is_zero(a)) return a;
     if (is_zero(b)) return b;
 
@@ -118,13 +127,16 @@ const OpmNum divPoly2[3] =
 
 OpmNum invert(const OpmNum& num)
 {
+    if (is_zero(num)) return Constants::nan;
+    if (is_inf(num)) return 0e0_opm;
+
 	const int32_t nexp = -num.exponent;
 
 	OpmNum o2 = num;
 	o2.exponent = 0;
 	o2.isNegative = false;
 	
-    OpmNum out = horner(o2, divPoly);
+    OpmNum out = horner_c(o2, divPoly);
     
     for (int i = 0; i < 9; i++) {
         out = (out + out * (Constants::one - (out * o2)));

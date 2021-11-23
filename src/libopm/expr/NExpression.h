@@ -79,20 +79,21 @@ class NExpressionParser
 	std::unordered_map<std::string, UnaryOp> m_unary;
 	std::unordered_map<std::string, BinaryOp> m_binary;
 
-	void compileRecursive(std::vector<NCompiledOp>& ops, const NExpressionNode* node);
-	OpmValue ConstantEval(NExpressionNode* node);
-	bool ConstantFoldR(NExpressionNode* node);
-	void ConstantFoldAll(NExpressionNode* node);
+	void compileRecursive(std::vector<NCompiledOp>& ops, const NExpressionNode* node) const;
+	bool ConstantFoldR(NExpressionNode* node) const;
+	void ConstantFoldAll(NExpressionNode* node) const;
 
 public:
 	NExpressionParser();
+	NExpressionParser(std::unordered_map<std::string, UnaryOp> unary, std::unordered_map<std::string, BinaryOp> binary) : m_unary(std::move(unary)), m_binary(std::move(binary)) {}
 	void registerFn(const std::string& name, UnaryOp val) { m_unary[name] = val; }
 	void registerFn(const std::string& name, BinaryOp val) { m_binary[name] = val; }
 
-	NExpression parse(const std::string& in);
-	NExpression rewrite(NExpressionRewriter& rew, const NExpression& expr);
-	NCompiledExpression compile(const NExpression& expr);
+	NExpression parse(const std::string& in) const;
+	NExpression rewrite(NExpressionRewriter& rew, const NExpression& expr) const;
+	NCompiledExpression compile(const NExpression& expr) const;
 
 	static bool IsConstant(const NExpressionNode* node);
+	OpmValue ConstantEval(const NExpressionNode* node) const;
 	static void Print(const NExpression& expr);
 };

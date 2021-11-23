@@ -1,8 +1,14 @@
 #include "OpmNum.hpp"
 #include <cctype>
 
+#include "cordic/Tables.hpp"
+
 OpmNum parse(const char* str)
 {
+	if (strcmp(str, "NaN") == 0) return Constants::nan;
+	if (strcmp(str, "Inf") == 0) return Constants::inf;
+	if (strcmp(str, "-Inf") == 0) return Constants::ninf;
+
 	OpmNum o;
 	bool negative = str[0] == '-';
 	if (negative) str++;

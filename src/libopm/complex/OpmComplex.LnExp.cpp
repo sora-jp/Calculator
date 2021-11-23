@@ -17,3 +17,11 @@ OpmComplex pow(const OpmComplex& a, const OpmComplex& b)
 {
 	return exp(b * ln(a));
 }
+
+OpmComplex sqrt(const OpmComplex& a)
+{
+	auto l = ln(a);
+	l.real = l.real * 5e-1_opm;
+	l.imag = l.imag * 5e-1_opm;
+	return exp(l);
+}

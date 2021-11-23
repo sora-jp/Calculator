@@ -16,6 +16,7 @@ public:
     uint32_t groups[GROUPS] {};
     
     constexpr OpmNum() : isNegative(false), isNan(false), isInfinity(false), exponent(0) {}
+	constexpr OpmNum(bool negative, bool nan, bool inf) : isNegative(negative), isNan(nan), isInfinity(inf), exponent(0) {}
     constexpr OpmNum(const OpmNum& copy) = default;
     OpmNum(int32_t num);
 
@@ -36,7 +37,7 @@ public:
         isNan = false;
         isInfinity = false;
         exponent = 0;
-        for (unsigned int& group : groups) group = 0;
+        for (auto& group : groups) group = 0;
     }
 
 	uint32_t& operator[](size_t idx);
@@ -98,7 +99,12 @@ bool operator<(const OpmNum& a, const OpmNum& b);
 bool operator>(const OpmNum& a, const OpmNum& b);
 bool operator<=(const OpmNum& a, const OpmNum& b);
 bool operator>=(const OpmNum& a, const OpmNum& b);
+
 bool is_zero(const OpmNum& a);
+bool is_nan(const OpmNum& a);
+bool is_pinf(const OpmNum& a);
+bool is_ninf(const OpmNum& a);
+bool is_inf(const OpmNum& a);
 
 OpmNum operator>>(const OpmNum& a, int amt);
 OpmNum operator<<(const OpmNum& a, int amt);

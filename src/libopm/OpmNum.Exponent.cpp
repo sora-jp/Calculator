@@ -7,6 +7,10 @@
 
 OpmNum exp(const OpmNum& arg)
 {
+	if (is_nan(arg)) return Constants::nan;
+	if (is_pinf(arg)) return Constants::nan;
+	if (is_ninf(arg)) return 0e0_opm;
+
     OpmNum accumulator = arg;
 	accumulator.isNegative = false;
 	
@@ -48,10 +52,19 @@ OpmNum exp2(const OpmNum& num)
 
 OpmNum pow(const OpmNum& x, const OpmNum& y)
 {
+	if (is_nan(x) || is_nan(y)) return Constants::nan;
+	if (x.isNegative) return Constants::nan;
+
+	const bool zy = is_zero(y);
+	if (is_zero(x) && zy) return Constants::one;
+	if (x == Constants::one && is_inf(y)) return Constants::one;
+	if (is_inf(x) && zy) return Constants::one;
+
 	return exp(y * ln(x));
 }
 
 OpmNum sqrt(const OpmNum& x)
 {
+	if (x.isNegative) return Constants::nan;
 	return exp(5e-1_opm * ln(x));
 }

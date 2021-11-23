@@ -32,7 +32,7 @@ struct NOperation
 		return *this;
 	}
 
-	NOperation& operator=(NOperation&& other)
+	NOperation& operator=(NOperation&& other) noexcept
 	{
 		type = other.type;
 		payload = std::move(other.payload);
@@ -124,6 +124,8 @@ inline NExpressionNode* exp(NExpressionNode* a) { return fnCall("exp", a, nullpt
 
 template<typename T, enable_if_opm_type<T> = true>
 inline NExpressionNode* constant(const T& a) { return new NExpressionNode{ std::move<NOperation>({NOpType::Constant, wrap<T>(a)}), nullptr, nullptr }; }
+
+inline NExpressionNode* constant(const OpmValue& a) { return new NExpressionNode{ std::move<NOperation>({NOpType::Constant, a}), nullptr, nullptr }; }
 
 inline void add(NExpressionNode* a, NExpressionNode* b, NExpressionNode* res) { binOp(a, "+", b, res); }
 inline void sub(NExpressionNode* a, NExpressionNode* b, NExpressionNode* res) { binOp(a, "-", b, res); }

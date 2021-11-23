@@ -38,6 +38,9 @@ bool cordic_trig(const OpmNum& arg, OpmNum& ox, OpmNum& oy)
 
 OpmNum tan(const OpmNum& arg)
 {
+	if (is_nan(arg)) return arg;
+	if (is_inf(arg)) return Constants::nan;
+
 	OpmNum ox, oy;
 	cordic_trig(arg, ox, oy);
 	
@@ -46,6 +49,9 @@ OpmNum tan(const OpmNum& arg)
 
 OpmNum cot(const OpmNum& arg)
 {
+	if (is_nan(arg)) return arg;
+	if (is_inf(arg)) return Constants::nan;
+
 	OpmNum ox, oy;
 	cordic_trig(arg, ox, oy);
 
@@ -54,6 +60,9 @@ OpmNum cot(const OpmNum& arg)
 
 OpmNum sin(const OpmNum& arg)
 {
+	if (is_nan(arg)) return arg;
+	if (is_inf(arg)) return Constants::nan;
+
 	OpmNum ox, oy;
 	const auto n = cordic_trig(arg, ox, oy);
 	if (is_zero(ox)) return oy.isNegative ? -1e0_opm : 1e0_opm;
@@ -70,6 +79,9 @@ OpmNum sin(const OpmNum& arg)
 
 OpmNum cos(const OpmNum& arg)
 {
+	if (is_nan(arg)) return arg;
+	if (is_inf(arg)) return Constants::nan;
+
 	OpmNum ox, oy;
 	const auto n = cordic_trig(arg, ox, oy);
 	if (is_zero(oy)) return ox.isNegative ? 1e0_opm : -1e0_opm;
@@ -86,6 +98,12 @@ OpmNum cos(const OpmNum& arg)
 
 void trig(const OpmNum& arg, OpmNum& sin, OpmNum& cos, OpmNum& tan)
 {
+	if (is_nan(arg) || is_inf(arg))
+	{
+		sin = cos = tan = Constants::nan;
+		return;
+	}
+
 	OpmNum ox, oy;
 	const bool n = cordic_trig(arg, ox, oy);
 	

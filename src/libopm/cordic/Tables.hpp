@@ -15,6 +15,9 @@ extern const OpmNum quart_pi;
 extern const OpmNum tau;
 extern const OpmNum one;
 extern const OpmNum one_half;
+constexpr OpmNum nan = OpmNum(false, true, false);
+constexpr OpmNum inf = OpmNum(false, false, true);
+constexpr OpmNum ninf = OpmNum(true, false, true);
 }
 namespace Tables {
 extern const OpmNum lnTable[];
