@@ -54,7 +54,7 @@ class NCompiledExpression
 	std::vector<NCompiledOp> m_ops;
 
 public:
-	OpmValue exec(const NExpressionContext& ctx)
+	OpmValue exec(const NExpressionContext& ctx) const
 	{
 		OpmStack<EXPR_STACK_DEPTH> stack;
 		for (const auto& op : m_ops)

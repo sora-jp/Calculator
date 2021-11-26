@@ -136,7 +136,7 @@ OpmNum invert(const OpmNum& num)
 	o2.exponent = 0;
 	o2.isNegative = false;
 	
-    OpmNum out = horner_c(o2, divPoly);
+    OpmNum out = horner(o2, divPoly);
     
     for (int i = 0; i < 9; i++) {
         out = (out + out * (Constants::one - (out * o2)));

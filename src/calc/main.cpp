@@ -17,6 +17,7 @@
 #include "rt_poly/OpmDynamic.h"
 #include "expr/NExpression.h"
 #include "expr/NSimplify.h"
+#include "alg/Algorithm.h"
 
 int main(int argc, char** argv)
 {
@@ -27,21 +28,24 @@ int main(int argc, char** argv)
 		if (exit) return res;
 	}
 
+	std::cout << "Ln(x)  took   " << Time(ln, 1e0_opm, 1e100_opm) << "ms" << std::endl;
+	std::cout << "Exp(x) took   " << Time(exp, -1e1_opm, 1e1_opm) << "ms" << std::endl;
+	std::cout << "Inv(x) took   " << Time(invert, -1e1_opm, 1e1_opm) << "ms" << std::endl;
+	std::cout << "Sin(x) took   " << Time(sin, -1e1_opm, 1e1_opm) << "ms" << std::endl;
+
 	NExpressionContext ctx;
 	ctx.set(5e0_opm, "k");
 	ctx.set(5e0_opm, "x");
 
-	auto expr2 = Expression::parse("1 + 2 + x - (3 + x - 5)");
-	auto expr3 = Expression::rewrite<NSimplify>(expr2);
-	auto cmp = Expression::compile(expr3);
+	auto expr2 = Expression::parse("sin(2*x)");
+	auto cmp = Expression::compile(expr2);
 	//auto res = cmp.exec(ctx);
 
 	NExpressionParser::Print(expr2);
-	NExpressionParser::Print(expr3);
 
-	//char str[256] = {};
-	//format(res, str, FormatMode::Standard);
-	//std::cout << str << std::endl;
+	char str[256] = {};
+	format(Algorithm::adaptiveSimpson(cmp, 1e0_opm, 2e1_opm, 1e-2_opm), str, FormatMode::Standard);
+	std::cout << str << std::endl;
 
 	//std::cout << std::endl << "AFTER REWRITE" << std::endl;
 	////NExpressionParser::Print(expr3);
@@ -71,10 +75,6 @@ int main(int argc, char** argv)
 	//char str[256] = {};
 	//format(res, str, FormatMode::Standard);
 	//std::cout << str << std::endl;
-
-	//std::cout << "Ln(x)  took   " << Time(ln, 1e0_opm, 1e100_opm) << "ms" << std::endl;
-	//std::cout << "Exp(x) took   " << Time(exp, -1e1_opm, 1e1_opm) << "ms" << std::endl;
-	//std::cout << "Inv(x) took   " << Time(invert, -1e1_opm, 1e1_opm) << "ms" << std::endl;
 	
 	return 0;
 }

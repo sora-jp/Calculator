@@ -230,18 +230,18 @@ int precedence(const NOperation& op)
 void Print(const NExpressionNode* node, int lastPrec = 0)
 {
 	if (node == nullptr) return;
-	for (uint32_t i = 0; i < lastPrec; i++) std::cout << "  ";
-	if (node->op.type != NOpType::Constant) std::cout << node->op.payload << " (" << ToString(node->op.type) << ")" << std::endl;
-	else
-	{
-		char s[256] = {};
-		format(node->op.constant, s, FormatMode::Standard);
-		std::cout << s << " (Constant)" << std::endl;
-	}
-	Print(node->left, lastPrec + 1);
-	Print(node->right, lastPrec + 1);
+	//for (uint32_t i = 0; i < lastPrec; i++) std::cout << "  ";
+	//if (node->op.type != NOpType::Constant) std::cout << node->op.payload << " (" << ToString(node->op.type) << ")" << std::endl;
+	//else
+	//{
+	//	char s[256] = {};
+	//	format(node->op.constant, s, FormatMode::Standard);
+	//	std::cout << s << " (Constant)" << std::endl;
+	//}
+	//Print(node->left, lastPrec + 1);
+	//Print(node->right, lastPrec + 1);
 
-	return;
+	//return;
 	auto prec = precedence(node->op);
 	bool paren = prec < lastPrec && lastPrec != -1 && prec != -1;
 	if (paren) std::cout << "(";
