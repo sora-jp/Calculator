@@ -15,11 +15,12 @@ extern const OpmNum quart_pi;
 extern const OpmNum tau;
 extern const OpmNum one;
 extern const OpmNum one_half;
-constexpr OpmNum nan = OpmNum(false, true, false);
-constexpr OpmNum inf = OpmNum(false, false, true);
-constexpr OpmNum ninf = OpmNum(true, false, true);
+extern const OpmNum nan;
+extern const OpmNum inf;
+extern const OpmNum ninf;
 }
 namespace Tables {
 extern const OpmNum lnTable[];
 extern const OpmNum atanTable[];
+extern const OpmNum gammaTable[];
 }

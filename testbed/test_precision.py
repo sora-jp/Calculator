@@ -121,8 +121,8 @@ def test(fn_name: str, fn, count: int, min: mpmath.mpf, max: mpmath.mpf):
 
 
 def testfun(x):
-    return mpmath.acos(x)
+    return mpmath.gamma(x)
 
 
 if __name__ == "__main__":
-    test("acos", testfun, 100000, mpmath.mpf(-1), mpmath.mpf(1))
+    test("gamma", testfun, 150000, mpmath.mpf(1), mpmath.mpf(20))

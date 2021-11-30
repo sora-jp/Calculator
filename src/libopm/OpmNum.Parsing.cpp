@@ -39,3 +39,23 @@ OpmNum parse(const char* str)
 
 	return o;
 }
+
+OpmNum parse_sci(const char* str)
+{
+	OpmNum o;
+	bool isNeg = str[0] == '-';
+	if (isNeg) str++;
+
+	int d = 0;
+	while (str[d] != 'e' && str[d] != 'E')
+	{
+		o.groups[d >> 3] |= (str[d] - '0') << ((7 - (d & 7)) * 4);
+		d++;
+	}
+
+	d++;
+	o.exponent = atoi(str + d);
+	o.isNegative = isNeg;
+
+	return o;
+}

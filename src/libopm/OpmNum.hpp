@@ -148,6 +148,8 @@ OpmNum sinh(const OpmNum& arg);
 OpmNum cosh(const OpmNum& arg);
 OpmNum tanh(const OpmNum& arg);
 
+OpmNum gamma(const OpmNum& x);
+
 OpmNum horner(const OpmNum& x, const OpmNum* coeffs, size_t size);
 
 template<size_t Size>

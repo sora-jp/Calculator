@@ -10,14 +10,16 @@ mpmath.mp.dps = DIGITS
 
 def format_constant(n: mpmath.mpf):
     #print(n)
-    s = mpmath.nstr(n, DIGITS, strip_zeros=False, min_fixed=5, max_fixed=4, show_zero_exponent=True).split('e')
+    s = mpmath.nstr(n, DIGITS + 1, strip_zeros=False, min_fixed=5, max_fixed=4, show_zero_exponent=True).split('e')
     print("e".join(s))
-    s[0] = s[0].replace('.', '')
+    s[0] = s[0].replace('.', '').lstrip("-")
+    
 
     digs = []
     for dn in range(GROUPS):
         strs = s[0][dn * 8:dn * 8 + 8]
         dgs = "0x" + "".join(strs)
+        dgs = dgs + "0" * (8 - len(strs))
         digs.append(dgs)
 
     return F"OpmNum::Constant<{','.join(digs)}>({'true' if n < 0 else 'false'}, {int(s[1])})"
@@ -27,6 +29,9 @@ def write_constant(file: io.TextIOBase, fcpp: io.TextIOBase, name, n: mpmath.mpf
     file.write(F"extern const OpmNum {name};\n")
     fcpp.write(F"const OpmNum {name} = {format_constant(n)};")
 
+def write_constant_raw(file: io.TextIOBase, fcpp: io.TextIOBase, name, n):
+    file.write(F"extern const OpmNum {name};\n")
+    fcpp.write(F"const OpmNum {name} = OpmNum({n});")
 
 def generate(file, op, name):
     nums = []
@@ -77,6 +82,9 @@ with open("Tables.hpp", "w") as f:
         write_constant(f, fc, "tau", mpmath.pi() * mpmath.mpf(2))
         write_constant(f, fc, "one", mpmath.mpf(1))
         write_constant(f, fc, "one_half", mpmath.mpf(1) / mpmath.mpf(2))
+        write_constant_raw(f, fc, "nan", "false, true, false")
+        write_constant_raw(f, fc, "inf", "false, false, true")
+        write_constant_raw(f, fc, "ninf", "true, false, true")
         f.write("}\n")
         fc.write("}\n")
 
@@ -110,6 +118,22 @@ with open("Tables.hpp", "w") as f:
             o += ",\n\t".join(nums)
             o += "\n};\n\n"
             f.write("extern const OpmNum atanTable[];\n")
+            fc.write(o)
+        
+        with open("constants/gamma.txt", "r") as f3:
+            nums = []
+            lns = f3.read().split('\n')
+            lns = list(filter(None, lns))
+            for i in range(len(lns)):
+                num = mpmath.mpmathify(lns[i])
+                print(num)
+                nums.append(format_constant(num))
+                print()
+
+            o = F"const OpmNum gammaTable[{len(lns)}] = \n{{\n\t"
+            o += ",\n\t".join(nums)
+            o += "\n};\n\n"
+            f.write("extern const OpmNum gammaTable[];\n")
             fc.write(o)
 
         f.write("}\n")

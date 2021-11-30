@@ -16,7 +16,8 @@ const std::map<std::string, OpmNum(*)(const OpmNum&)> fnMap =
 	{"asin", &asin},
 	{"acos", &acos},
 	{"inv", &invert},
-	{"inv3", &invert3}
+	{"inv3", &invert3},
+	{"gamma", &gamma}
 };
 
 inline OpmNum get()

@@ -46,7 +46,7 @@ void ParseOpm(OpmNum& output)
 	{
 		//static_assert(C == '0' || C == '1' || C == '2' || C == '3' || C == '4' || C == '5' || C == '6' || C == '7' || C == '8' || C == '9', "Invalid character found in literal");
 		
-		if (Digit < DIGITCOUNT) output.groups[(Digit >> 3)] |= (C - '0') << ((7 - (Digit & 7)) * 4);
+		if (Digit < DIGITCOUNT) output.groups[(Digit >> 3)] |= static_cast<uint32_t>(C - '0') << ((7 - (Digit & 7)) * 4);
 		ParseOpm<Digit + 1, D0, D...>(output);
 	}
 }
