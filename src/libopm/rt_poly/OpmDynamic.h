@@ -32,6 +32,8 @@ DECLARE_DYN_2(operator*);
 DECLARE_DYN_2(operator/);
 
 DECLARE_DYN_1(ln);
+DECLARE_DYN_1(log10);
+DECLARE_DYN_1(log2);
 DECLARE_DYN_2(log);
 DECLARE_DYN_1(exp);
 DECLARE_DYN_1(sqrt);

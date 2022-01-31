@@ -33,8 +33,17 @@ project "Calculator"
 	targetdir "bin/calc/%{cfg.buildcfg}"
 	
 	files { "src/calc/**.h", "src/calc/**.cpp", "src/calc/**.hpp", "src/calc/**.inl" }
-	includedirs { "src/libopm" }
-	links { "OpmNum" }
+	includedirs { "src/libopm", "vendor" }
+	links { "OpmNum", "CppTerminal", "vendor/ftxui/*.lib"}
+	
+project "CppTerminal"
+	kind "StaticLib"
+	language "C++"
+	cppdialect "C++17"
+	targetdir "bin/cppterm/%{cfg.buildcfg}"
+	
+	files { "vendor/cpp-terminal/**.cpp" }
+	includedirs { "vendor" }
 		
 project "NTL"
 	kind "StaticLib"

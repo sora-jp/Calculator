@@ -163,7 +163,7 @@ OpmValue NExpressionParser::ConstantEval(const NExpressionNode* node) const
 	if (node->op.type == NOpType::FunctionCall)
 	{
 		auto& p = node->op.payload;
-		if (m_unary.find(p) != m_unary.end()) return m_unary.at(p)(ConstantEval(node->left));
+		if (m_unary.find(p) != m_unary.end() && node->right == nullptr) return m_unary.at(p)(ConstantEval(node->left));
 		if (m_binary.find(p) != m_binary.end()) return m_binary.at(p)(ConstantEval(node->left), ConstantEval(node->right));
 	}
 
@@ -328,7 +328,7 @@ void NExpressionParser::compileRecursive(std::vector<NCompiledOp>& ops, const NE
 	if (node->op.type == NOpType::Binary) ops.emplace_back(m_binary.at(node->op.payload));
 	if (node->op.type == NOpType::FunctionCall)
 	{
-		if (m_unary.find(node->op.payload) != m_unary.end()) ops.emplace_back(m_unary.at(node->op.payload));
+		if (m_unary.find(node->op.payload) != m_unary.end() && node->right == nullptr) ops.emplace_back(m_unary.at(node->op.payload));
 		else if (m_binary.find(node->op.payload) != m_binary.end()) ops.emplace_back(m_binary.at(node->op.payload));
 		else assert(false);
 	}

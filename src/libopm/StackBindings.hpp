@@ -40,5 +40,5 @@ public:
 	}
 
 	[[nodiscard]] int StackSize() const { return m_sp; }
-	const OpmNum& operator[](int idx) const { return numbers[idx]; }
+	const OpmValue& operator[](int idx) const { return numbers[idx]; }
 };

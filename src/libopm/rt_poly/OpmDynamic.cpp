@@ -34,6 +34,9 @@ OpmValue log(const OpmValue& a, const OpmValue& b)
 	return ln(a) / ln(b);
 }
 
+OpmValue log10(const OpmValue& value) { return ln(value) / wrap(Constants::ln10); }
+OpmValue log2(const OpmValue& value) { return ln(value) / wrap(Constants::ln2); }
+
 IMPL_DYN_1(exp);
 OpmValue pow(const OpmValue& a, const OpmValue& b)
 {

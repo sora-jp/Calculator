@@ -22,7 +22,7 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 {
 	if (is_nan(num))
 	{
-		strncpy(buffer, "NaN", 4);
+		strncpy(buffer, "NaN", 3);
 		return 4;
 	}
 
@@ -34,7 +34,7 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 			buffer++;
 		}
 		strncpy(buffer, "Infinity", sizeof("Infinity"));
-		return sizeof("Infinity") + (num.isNegative ? 1 : 0);
+		return sizeof("Infinity") + (num.isNegative ? 1 : 0) - 1;
 	}
 
 	if (mode == FormatMode::Standard)
@@ -67,7 +67,7 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 				}
 			}
 
-			return len + (num.isNegative ? 1 : 0);
+			return strlen(buffer) + (num.isNegative ? 1 : 0);
 		}
 	}
 	

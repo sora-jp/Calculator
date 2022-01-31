@@ -17,6 +17,8 @@ static const NExpressionParser s_parser
 	{"atan", atan},
 	{"sqrt", sqrt},
 	{"exp", exp},
+	{"log", log10},
+	{"log2", log2},
 	{"ln", ln}
 },
 {
