@@ -13,12 +13,15 @@ class  InfixParser : public antlr4::Parser {
 public:
   enum {
     MULT = 1, DIV = 2, MOD = 3, PLUS = 4, MINUS = 5, DOT = 6, POW = 7, COMMA = 8, 
-    LPAREN = 9, RPAREN = 10, NUMBER = 11, ID = 12, COMMENT = 13, WS = 14
+    EQUALS = 9, LPAREN = 10, RPAREN = 11, LBRACK = 12, RBRACK = 13, INTEGER = 14, 
+    NUMBER = 15, IINTEGER = 16, INUMBER = 17, ID = 18, COMMENT = 19, WS = 20
   };
 
   enum {
-    RuleEval = 0, RuleExpression = 1, RuleTerm = 2, RuleFactor = 3, RuleSecondary = 4, 
-    RulePrimary = 5, RuleVariable = 6, RuleConstant = 7, RuleFunc = 8, RuleParams = 9
+    RuleEval = 0, RuleAssignment = 1, RuleFunctionDef = 2, RuleFuncWVars = 3, 
+    RuleExpression = 4, RuleTerm = 5, RuleFactor = 6, RuleSecondary = 7, 
+    RulePrimary = 8, RuleVariable = 9, RuleHistref = 10, RuleConstant = 11, 
+    RuleFunc = 12, RuleParams = 13
   };
 
   explicit InfixParser(antlr4::TokenStream *input);
@@ -32,12 +35,16 @@ public:
 
 
   class EvalContext;
+  class AssignmentContext;
+  class FunctionDefContext;
+  class FuncWVarsContext;
   class ExpressionContext;
   class TermContext;
   class FactorContext;
   class SecondaryContext;
   class PrimaryContext;
   class VariableContext;
+  class HistrefContext;
   class ConstantContext;
   class FuncContext;
   class ParamsContext; 
@@ -47,6 +54,8 @@ public:
     EvalContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     ExpressionContext *expression();
+    AssignmentContext *assignment();
+    FunctionDefContext *functionDef();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -54,6 +63,55 @@ public:
   };
 
   EvalContext* eval();
+
+  class  AssignmentContext : public antlr4::ParserRuleContext {
+  public:
+    AssignmentContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    VariableContext *variable();
+    antlr4::tree::TerminalNode *EQUALS();
+    ExpressionContext *expression();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  AssignmentContext* assignment();
+
+  class  FunctionDefContext : public antlr4::ParserRuleContext {
+  public:
+    FunctionDefContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    FuncWVarsContext *funcWVars();
+    antlr4::tree::TerminalNode *EQUALS();
+    ExpressionContext *expression();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  FunctionDefContext* functionDef();
+
+  class  FuncWVarsContext : public antlr4::ParserRuleContext {
+  public:
+    FuncWVarsContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *ID();
+    antlr4::tree::TerminalNode *LPAREN();
+    std::vector<VariableContext *> variable();
+    VariableContext* variable(size_t i);
+    antlr4::tree::TerminalNode *RPAREN();
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  FuncWVarsContext* funcWVars();
 
   class  ExpressionContext : public antlr4::ParserRuleContext {
   public:
@@ -125,6 +183,7 @@ public:
     PrimaryContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     FuncContext *func();
+    HistrefContext *histref();
     VariableContext *variable();
     ConstantContext *constant();
     antlr4::tree::TerminalNode *LPAREN();
@@ -151,11 +210,29 @@ public:
 
   VariableContext* variable();
 
+  class  HistrefContext : public antlr4::ParserRuleContext {
+  public:
+    HistrefContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *LBRACK();
+    antlr4::tree::TerminalNode *INTEGER();
+    antlr4::tree::TerminalNode *RBRACK();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  HistrefContext* histref();
+
   class  ConstantContext : public antlr4::ParserRuleContext {
   public:
     ConstantContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *NUMBER();
+    antlr4::tree::TerminalNode *INTEGER();
+    antlr4::tree::TerminalNode *INUMBER();
+    antlr4::tree::TerminalNode *IINTEGER();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;

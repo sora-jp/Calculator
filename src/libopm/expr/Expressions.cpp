@@ -48,7 +48,7 @@ NCompiledExpression Expression::compile(const NExpression& expr)
 
 bool Expression::isConstant(const NExpressionNode* node)
 {
-	return NExpressionParser::IsConstant(node);
+	return s_parser.IsConstant(node);
 }
 
 OpmValue Expression::constantEval(const NExpressionNode* node)

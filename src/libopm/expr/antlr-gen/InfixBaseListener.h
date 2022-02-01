@@ -19,6 +19,15 @@ public:
   virtual void enterEval(InfixParser::EvalContext * /*ctx*/) override { }
   virtual void exitEval(InfixParser::EvalContext * /*ctx*/) override { }
 
+  virtual void enterAssignment(InfixParser::AssignmentContext * /*ctx*/) override { }
+  virtual void exitAssignment(InfixParser::AssignmentContext * /*ctx*/) override { }
+
+  virtual void enterFunctionDef(InfixParser::FunctionDefContext * /*ctx*/) override { }
+  virtual void exitFunctionDef(InfixParser::FunctionDefContext * /*ctx*/) override { }
+
+  virtual void enterFuncWVars(InfixParser::FuncWVarsContext * /*ctx*/) override { }
+  virtual void exitFuncWVars(InfixParser::FuncWVarsContext * /*ctx*/) override { }
+
   virtual void enterExpression(InfixParser::ExpressionContext * /*ctx*/) override { }
   virtual void exitExpression(InfixParser::ExpressionContext * /*ctx*/) override { }
 
@@ -36,6 +45,9 @@ public:
 
   virtual void enterVariable(InfixParser::VariableContext * /*ctx*/) override { }
   virtual void exitVariable(InfixParser::VariableContext * /*ctx*/) override { }
+
+  virtual void enterHistref(InfixParser::HistrefContext * /*ctx*/) override { }
+  virtual void exitHistref(InfixParser::HistrefContext * /*ctx*/) override { }
 
   virtual void enterConstant(InfixParser::ConstantContext * /*ctx*/) override { }
   virtual void exitConstant(InfixParser::ConstantContext * /*ctx*/) override { }

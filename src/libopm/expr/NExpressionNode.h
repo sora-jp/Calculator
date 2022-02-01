@@ -1,8 +1,9 @@
 #pragma once
+#include <vector>
 
 enum class NOpType
 {
-	Invalid, Binary, Unary, Constant, Variable, FunctionCall
+	Invalid, Binary, Unary, Constant, Variable, FunctionCall, HistoryRef
 };
 
 typedef OpmValue(*BinaryOp)(const OpmValue&, const OpmValue&);
@@ -11,10 +12,12 @@ typedef OpmValue(*UnaryOp)(const OpmValue&);
 struct NOperation
 {
 	NOpType type = NOpType::Invalid;
+	int32_t histIndex = -1;
 	std::string payload = {};
 	OpmValue constant;
 
 	NOperation() = default;
+	NOperation(NOpType type, int32_t histIndex) : type(type), histIndex(histIndex) {}
 	NOperation(NOpType type, const std::string& payload) : type(type), payload(payload) {}
 	NOperation(NOpType type, OpmValue constant) : type(type), constant(std::move(constant)) {}
 
@@ -29,6 +32,7 @@ struct NOperation
 		type = other.type;
 		payload = other.payload;
 		constant = other.constant;
+		histIndex = other.histIndex;
 		return *this;
 	}
 
@@ -37,7 +41,7 @@ struct NOperation
 		type = other.type;
 		payload = std::move(other.payload);
 		constant = std::move(other.constant);
-
+		histIndex = other.histIndex;
 		other.type = NOpType::Invalid;
 		return *this;
 	}
@@ -46,37 +50,47 @@ struct NOperation
 struct NExpressionNode
 {
 	NOperation op;
+	std::vector<NExpressionNode*> children;
 
-	//NExpressionNode* parent = nullptr;
-	NExpressionNode* left = nullptr;
-	NExpressionNode* right = nullptr;
+	NExpressionNode() = default;
+	NExpressionNode(NOperation op, const std::initializer_list<NExpressionNode*> list) : op(std::move(op)), children(list) {}
+	NExpressionNode(NOperation op) : op(std::move(op)) {}
+
+	NExpressionNode* child(uint32_t idx) const { return idx < children.size() ? children[idx] : nullptr; }
+	
+	void setChildren(std::initializer_list<NExpressionNode*> newChildren)
+	{
+		for (const auto* c : children) delete c;
+		children = newChildren;
+	}
 
 	NExpressionNode* copy() const
 	{
 		auto* ret = new NExpressionNode();
 		ret->op = op;
-		if (left)
+		for (const auto* c : children)
 		{
-			ret->left = left->copy();
-			//ret->left->parent = ret;
-		}
-		if (right)
-		{
-			ret->right = right->copy();
-			//ret->right->parent = ret;
+			ret->children.push_back(c->copy());
 		}
 		return ret;
 	}
 
 	~NExpressionNode()
 	{
-		delete left;
-		delete right;
+		for (const auto* c : children) delete c;
 	}
+};
+
+enum class NExpressionType
+{
+	Expression, FunctionDefinition, VariableAssignment
 };
 
 struct NExpression
 {
+	NExpressionType type;
+	std::string varName;
+	std::vector<std::string> fnData;
 	NExpressionNode* top;
 
 	NExpression(NExpressionNode* top) : top(top) {}
@@ -88,38 +102,34 @@ struct NExpression
 	}
 };
 
-inline NExpressionNode* binOp(NExpressionNode* a, const std::string& op, NExpressionNode* b) { return new NExpressionNode{ {NOpType::Binary, op}, a, b }; }
-inline NExpressionNode* unOp(const std::string& op, NExpressionNode* a) { return new NExpressionNode{ {NOpType::Unary, op}, a }; }
-inline NExpressionNode* fnCall(const std::string& fn, NExpressionNode* a, NExpressionNode* b) { return new NExpressionNode{ {NOpType::FunctionCall, fn}, a, b }; }
-inline NExpressionNode* var(const std::string& v) { return new NExpressionNode{ { NOpType::Variable, v }, nullptr, nullptr }; }
+inline NExpressionNode* binOp(NExpressionNode* a, const std::string& op, NExpressionNode* b) { return new NExpressionNode{ {NOpType::Binary, op}, {a, b} }; }
+inline NExpressionNode* unOp(const std::string& op, NExpressionNode* a) { return new NExpressionNode{ {NOpType::Unary, op}, {a} }; }
+inline NExpressionNode* fnCall(const std::string& fn, NExpressionNode* a, NExpressionNode* b) { return new NExpressionNode{ {NOpType::FunctionCall, fn}, {a, b} }; }
+inline NExpressionNode* var(const std::string& v) { return new NExpressionNode{ { NOpType::Variable, v }, {} }; }
 
 inline void binOp(NExpressionNode* a, const std::string& op, NExpressionNode* b, NExpressionNode* res) 
 {
 	res->op = {NOpType::Binary, op};
-	res->left = a;
-	res->right = b;
+	res->setChildren({ a, b });
 }
 
 inline void unOp(const std::string& op, NExpressionNode* a, NExpressionNode* res)
 {
 	res->op = { NOpType::Unary, op };
-	res->left = a;
-	res->right = nullptr;
+	res->setChildren({ a });
 }
 
 inline void fnCall(const std::string& fn, NExpressionNode* a, NExpressionNode* b, NExpressionNode* res)
 {
 	res->op = { NOpType::FunctionCall, fn };
-	res->left = a;
-	res->right = b;
+	res->setChildren({ a, b });
 }
 
 inline void var(const std::string& v, NExpressionNode* res)
 {
 	res->op = { NOpType::Variable, v };
-	res->left = res->right = nullptr;
+	res->setChildren({ });
 }
-
 
 inline NExpressionNode* add(NExpressionNode* a, NExpressionNode* b) { return binOp(a, "+", b); }
 inline NExpressionNode* sub(NExpressionNode* a, NExpressionNode* b) { return binOp(a, "-", b); }
@@ -131,9 +141,9 @@ inline NExpressionNode* ln(NExpressionNode* a) { return fnCall("ln", a, nullptr)
 inline NExpressionNode* exp(NExpressionNode* a) { return fnCall("exp", a, nullptr); }
 
 template<typename T, enable_if_opm_type<T> = true>
-inline NExpressionNode* constant(const T& a) { return new NExpressionNode{ std::move<NOperation>({NOpType::Constant, wrap<T>(a)}), nullptr, nullptr }; }
+inline NExpressionNode* constant(const T& a) { return new NExpressionNode{ std::move<NOperation>({NOpType::Constant, wrap<T>(a)}), {}}; }
 
-inline NExpressionNode* constant(const OpmValue& a) { return new NExpressionNode{ {NOpType::Constant, a}, nullptr, nullptr }; }
+inline NExpressionNode* constant(const OpmValue& a) { return new NExpressionNode{ {NOpType::Constant, a}, {} }; }
 
 inline void add(NExpressionNode* a, NExpressionNode* b, NExpressionNode* res) { binOp(a, "+", b, res); }
 inline void sub(NExpressionNode* a, NExpressionNode* b, NExpressionNode* res) { binOp(a, "-", b, res); }

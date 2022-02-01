@@ -17,6 +17,15 @@ public:
   virtual void enterEval(InfixParser::EvalContext *ctx) = 0;
   virtual void exitEval(InfixParser::EvalContext *ctx) = 0;
 
+  virtual void enterAssignment(InfixParser::AssignmentContext *ctx) = 0;
+  virtual void exitAssignment(InfixParser::AssignmentContext *ctx) = 0;
+
+  virtual void enterFunctionDef(InfixParser::FunctionDefContext *ctx) = 0;
+  virtual void exitFunctionDef(InfixParser::FunctionDefContext *ctx) = 0;
+
+  virtual void enterFuncWVars(InfixParser::FuncWVarsContext *ctx) = 0;
+  virtual void exitFuncWVars(InfixParser::FuncWVarsContext *ctx) = 0;
+
   virtual void enterExpression(InfixParser::ExpressionContext *ctx) = 0;
   virtual void exitExpression(InfixParser::ExpressionContext *ctx) = 0;
 
@@ -34,6 +43,9 @@ public:
 
   virtual void enterVariable(InfixParser::VariableContext *ctx) = 0;
   virtual void exitVariable(InfixParser::VariableContext *ctx) = 0;
+
+  virtual void enterHistref(InfixParser::HistrefContext *ctx) = 0;
+  virtual void exitHistref(InfixParser::HistrefContext *ctx) = 0;
 
   virtual void enterConstant(InfixParser::ConstantContext *ctx) = 0;
   virtual void exitConstant(InfixParser::ConstantContext *ctx) = 0;

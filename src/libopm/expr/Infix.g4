@@ -1,7 +1,23 @@
 grammar Infix;
 
-eval : expression ;
+eval : expression
+	 | assignment
+	 | functionDef
+	 ;
 
+assignment
+	: variable EQUALS expression
+	;
+
+functionDef
+	: funcWVars EQUALS expression
+	;
+
+funcWVars
+	: ID LPAREN variable RPAREN
+	| ID LPAREN (variable COMMA)+ variable RPAREN
+	;
+	
 expression
     : term
     | expression PLUS term
@@ -28,6 +44,7 @@ secondary
 
 primary
     : func
+	| histref
 	| variable
 	| constant
     | '(' expression ')'
@@ -37,8 +54,15 @@ variable
 	: ID
 	;
 
+histref
+	: LBRACK INTEGER RBRACK
+	;
+
 constant
 	: NUMBER
+	| INTEGER
+	| INUMBER
+	| IINTEGER
 	;
 	
 func 
@@ -60,12 +84,19 @@ MINUS : '-' ;
 DOT   : '.' ;
 POW   : '^' ;
 COMMA : ',' ;
+EQUALS: '=' ;
 
 LPAREN : '(' ;
 RPAREN : ')' ;
+LBRACK : '[' ;
+RBRACK : ']' ;
 
-NUMBER  : [0-9]+ ('.' [0-9]+)? ('e'[0-9]+)? 
-		| '.' [0-9]+ ('e'[0-9]+)? ;
+INTEGER : [0-9]+ ;
+NUMBER  : [0-9]+ '.' [0-9]+ ('e'[0-9]+)?
+		| '.' [0-9]+ ('e'[0-9]+)?;
+
+IINTEGER : INTEGER 'i';
+INUMBER : NUMBER 'i';
 
 ID : [a-zA-Z] [a-zA-Z0-9]*;
 

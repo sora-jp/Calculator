@@ -86,14 +86,34 @@ int main(int argc, char** argv)
 	ctx.set(OpmComplex(0, 1), "i");
 	ctx.set(Constants::pi, "pi");
 
+	auto a = Expression::parse("2 + 3 - 4 + 5 - 6");
+	
+
+	return 0;
 	std::string cmd;
 	InputOption opt;
 	opt.on_enter = [&]
 	{
 		auto expr = Expression::parse(cmd);
 		auto ce = Expression::compile(expr);
-		auto res = ce.exec(ctx);
-		s_history.push_back({ cmd, res });
+		if (expr.type == NExpressionType::FunctionDefinition)
+		{
+			std::string fnName = expr.fnData.front();
+
+			ctx.set(FunctionImplementation{ expr, ce, std::vector<std::string> {expr.fnData.begin() + 1, expr.fnData.end()} }, FunctionDefinition{ fnName, static_cast<uint32_t>(expr.fnData.size() - 1) });
+			s_history.push_back({ cmd, wrap(Constants::nan) });
+		}
+		else if (expr.type == NExpressionType::VariableAssignment)
+		{
+			auto res = ce.exec(ctx);
+			ctx.set(ce.exec(ctx), expr.varName);
+			s_history.push_back({ cmd, res });
+		}
+		else
+		{
+			auto res = ce.exec(ctx);
+			s_history.push_back({ cmd, res });
+		}
 
 		cmd.clear();
 	};

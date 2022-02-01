@@ -9,16 +9,27 @@
 #include "StackBindings.hpp"
 #define EXPR_STACK_DEPTH 16
 
+struct FunctionImplementation;
+struct FunctionDefinition
+{
+	std::string name;
+	uint32_t paramCount;
+};
+
 class NExpressionContext
 {
 	friend struct NCompiledOp;
 	std::map<std::string, OpmValue> m_variables;
+	std::vector<std::pair<FunctionDefinition, FunctionImplementation>> m_userFuncs;
 
 public:
 	NExpressionContext() = default;
 	OpmValue get(const std::string& s) const { return m_variables.at(s); }
+	const FunctionImplementation& get(const FunctionDefinition& f) const;
 	void set(const OpmNum& val, const std::string& s) { m_variables[s] = wrap(val); }
 	void set(const OpmComplex& val, const std::string& s) { m_variables[s] = wrap(val); }
+	void set(const OpmValue& val, const std::string& s) { m_variables[s] = val; }
+	void set(const FunctionImplementation& val, const FunctionDefinition& fn);
 };
 
 struct NCompiledOp
@@ -32,21 +43,16 @@ struct NCompiledOp
 		UnaryOp unary = nullptr;
 		BinaryOp binary;
 	};
+	FunctionDefinition fn = {};
 
 	NCompiledOp(const std::string& var) : type(NOpType::Variable), var(var) {}
 	NCompiledOp(const OpmValue& constant) : type(NOpType::Constant), constant(constant) {}
 	NCompiledOp(UnaryOp op) : type(NOpType::Unary), unary(op) {}
 	NCompiledOp(BinaryOp op) : type(NOpType::Binary), binary(op) {}
+	NCompiledOp(FunctionDefinition fn) : type(NOpType::FunctionCall), fn(fn) {}
 
-	void operator()(const NExpressionContext& ctx, OpmStack<EXPR_STACK_DEPTH>& stack) const
-	{
-		if (type == NOpType::Constant) stack.Push(constant);
-		if (type == NOpType::Variable) stack.Push(ctx.get(var)); //FIXME
-		if (type == NOpType::Unary) stack.Push(unary(stack.Pop()));
-		if (type == NOpType::Binary) stack.Push(binary(stack.Pop(), stack.Pop()));
-	}
+	void operator()(const NExpressionContext& ctx, OpmStack<EXPR_STACK_DEPTH>& stack) const;
 };
-
 
 class NCompiledExpression
 {
@@ -54,16 +60,7 @@ class NCompiledExpression
 	std::vector<NCompiledOp> m_ops;
 
 public:
-	OpmValue exec(const NExpressionContext& ctx) const
-	{
-		OpmStack<EXPR_STACK_DEPTH> stack;
-		for (const auto& op : m_ops)
-		{
-			op(ctx, stack);
-		}
-		auto res = stack.Pop();
-		return res.roundToNearest();
-	}
+	OpmValue exec(const NExpressionContext& ctx) const;
 };
 
 class NExpressionRewriter
@@ -72,6 +69,13 @@ class NExpressionRewriter
 public:
 	virtual ~NExpressionRewriter() = default;
 	virtual NExpressionNode* rewrite(const NExpressionNode* node) = 0;
+};
+
+struct FunctionImplementation
+{
+	NExpression expr;
+	NCompiledExpression cachedExpr;
+	std::vector<std::string> arguments;
 };
 
 class NExpressionParser
@@ -93,7 +97,7 @@ public:
 	NExpression rewrite(NExpressionRewriter& rew, const NExpression& expr) const;
 	NCompiledExpression compile(const NExpression& expr) const;
 
-	static bool IsConstant(const NExpressionNode* node);
+	bool IsConstant(const NExpressionNode* node) const;
 	OpmValue ConstantEval(const NExpressionNode* node) const;
 	static void Print(const NExpression& expr);
 };

@@ -13,7 +13,8 @@ class  InfixLexer : public antlr4::Lexer {
 public:
   enum {
     MULT = 1, DIV = 2, MOD = 3, PLUS = 4, MINUS = 5, DOT = 6, POW = 7, COMMA = 8, 
-    LPAREN = 9, RPAREN = 10, NUMBER = 11, ID = 12, COMMENT = 13, WS = 14
+    EQUALS = 9, LPAREN = 10, RPAREN = 11, LBRACK = 12, RBRACK = 13, INTEGER = 14, 
+    NUMBER = 15, IINTEGER = 16, INUMBER = 17, ID = 18, COMMENT = 19, WS = 20
   };
 
   explicit InfixLexer(antlr4::CharStream *input);

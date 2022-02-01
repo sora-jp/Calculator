@@ -49,23 +49,23 @@ NExpressionNode* NSimplify::rewriteInternal(const NExpressionNode* node)
 
 	if (is_add(node) || is_sub(node))
 	{
-		if (Expression::isConstant(node->left) && is_zero(Expression::constantEval(node->left)))  return is_sub(node) ? neg(rewriteInternal(node->right)) : rewriteInternal(node->right);
-		if (Expression::isConstant(node->right) && is_zero(Expression::constantEval(node->right))) return rewriteInternal(node->left);
+		if (Expression::isConstant(node->child(0)) && is_zero(Expression::constantEval(node->child(0))))  return is_sub(node) ? neg(rewriteInternal(node->child(1))) : rewriteInternal(node->child(1));
+		if (Expression::isConstant(node->child(1)) && is_zero(Expression::constantEval(node->child(1)))) return rewriteInternal(node->child(0));
 	}
 	if (is_mul(node) || is_div(node))
 	{
 		if (is_mul(node))
 		{
-			if (Expression::isConstant(node->left) && is_one(Expression::constantEval(node->left))) return rewriteInternal(node->right);
-			if (Expression::isConstant(node->right) && is_zero(Expression::constantEval(node->right))) return constant(0e0_opm);
-			if (Expression::isConstant(node->left) && is_neg_one(Expression::constantEval(node->left))) return neg(rewriteInternal(node->right));
+			if (Expression::isConstant(node->child(0)) && is_one(Expression::constantEval(node->child(0)))) return rewriteInternal(node->child(1));
+			if (Expression::isConstant(node->child(1)) && is_zero(Expression::constantEval(node->child(1)))) return constant(0e0_opm);
+			if (Expression::isConstant(node->child(0)) && is_neg_one(Expression::constantEval(node->child(0)))) return neg(rewriteInternal(node->child(1)));
 		}
 
-		if (Expression::isConstant(node->right) && is_one(Expression::constantEval(node->right))) return rewriteInternal(node->left);
-		if (Expression::isConstant(node->left) && is_zero(Expression::constantEval(node->left))) return constant(0e0_opm);
-		if (Expression::isConstant(node->right) && is_neg_one(Expression::constantEval(node->right))) return neg(rewriteInternal(node->left));
+		if (Expression::isConstant(node->child(1)) && is_one(Expression::constantEval(node->child(1)))) return rewriteInternal(node->child(0));
+		if (Expression::isConstant(node->child(0)) && is_zero(Expression::constantEval(node->child(0)))) return constant(0e0_opm);
+		if (Expression::isConstant(node->child(1)) && is_neg_one(Expression::constantEval(node->child(1)))) return neg(rewriteInternal(node->child(0)));
 	}
 
 	totFailed++;
-	return new NExpressionNode{ node->op, rewriteInternal(node->left), rewriteInternal(node->right) };
+	return new NExpressionNode{ node->op, {rewriteInternal(node->child(0)), rewriteInternal(node->child(1))} };
 }
