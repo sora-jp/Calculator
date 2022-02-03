@@ -34,16 +34,16 @@ project "Calculator"
 	
 	files { "src/calc/**.h", "src/calc/**.cpp", "src/calc/**.hpp", "src/calc/**.inl" }
 	includedirs { "src/libopm", "vendor" }
-	links { "OpmNum", "CppTerminal", "vendor/ftxui/*.lib"}
+	links { "OpmNum" }
 	
-project "CppTerminal"
-	kind "StaticLib"
-	language "C++"
-	cppdialect "C++17"
-	targetdir "bin/cppterm/%{cfg.buildcfg}"
+	filter "configurations:Debug"
+		links { "vendor/ftxui/bin/Debug/*.lib" }
+		
+	filter "configurations:DebugASAN"
+		links { "vendor/ftxui/bin/DebugASAN/*.lib" }
 	
-	files { "vendor/cpp-terminal/**.cpp" }
-	includedirs { "vendor" }
+	filter "configurations:Release"
+		links { "vendor/ftxui/bin/Release/*.lib" }
 		
 project "NTL"
 	kind "StaticLib"

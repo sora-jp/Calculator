@@ -21,8 +21,8 @@ struct NOperation
 	NOperation(NOpType type, const std::string& payload) : type(type), payload(payload) {}
 	NOperation(NOpType type, OpmValue constant) : type(type), constant(std::move(constant)) {}
 
-	NOperation(const NOperation& other) : type(other.type), payload(other.payload), constant(other.constant) {}
-	NOperation(NOperation&& other) noexcept : type(other.type), payload(std::move(other.payload)), constant(std::move(other.constant))
+	NOperation(const NOperation& other) : type(other.type), payload(other.payload), constant(other.constant), histIndex(other.histIndex) {}
+	NOperation(NOperation&& other) noexcept : type(other.type), payload(std::move(other.payload)), constant(std::move(other.constant)), histIndex(other.histIndex)
 	{
 		other.type = NOpType::Invalid;
 	}
@@ -93,8 +93,23 @@ struct NExpression
 	std::vector<std::string> fnData;
 	NExpressionNode* top;
 
-	NExpression(NExpressionNode* top) : top(top) {}
-	NExpression(const NExpression& other) : top(other.top != nullptr ? other.top->copy() : nullptr) {}
+	NExpression() = default;
+	NExpression(NExpressionType type, const std::string& varName, const std::vector<std::string>& fnData, NExpressionNode* top) : type(type), varName(varName), fnData(fnData), top(top) {}
+	NExpression(const NExpression& other) : type(other.type), varName(other.varName), fnData(other.fnData), top(other.top != nullptr ? other.top->copy() : nullptr) {}
+	NExpression(NExpression&& other) noexcept : type(other.type), varName(std::move(other.varName)), fnData(std::move(other.fnData)), top(other.top)
+	{
+		other.top = nullptr;
+	}
+
+	NExpression& operator=(const NExpression& other)
+	{
+		if (&other == this) return *this;
+		type = other.type;
+		varName = other.varName;
+		fnData = other.fnData;
+		top = other.top ? other.top->copy() : nullptr;
+		return *this;
+	}
 
 	~NExpression()
 	{
@@ -104,7 +119,7 @@ struct NExpression
 
 inline NExpressionNode* binOp(NExpressionNode* a, const std::string& op, NExpressionNode* b) { return new NExpressionNode{ {NOpType::Binary, op}, {a, b} }; }
 inline NExpressionNode* unOp(const std::string& op, NExpressionNode* a) { return new NExpressionNode{ {NOpType::Unary, op}, {a} }; }
-inline NExpressionNode* fnCall(const std::string& fn, NExpressionNode* a, NExpressionNode* b) { return new NExpressionNode{ {NOpType::FunctionCall, fn}, {a, b} }; }
+inline NExpressionNode* fnCall(const std::string& fn, const std::initializer_list<NExpressionNode*> c) { return new NExpressionNode{ {NOpType::FunctionCall, fn}, c }; }
 inline NExpressionNode* var(const std::string& v) { return new NExpressionNode{ { NOpType::Variable, v }, {} }; }
 
 inline void binOp(NExpressionNode* a, const std::string& op, NExpressionNode* b, NExpressionNode* res) 
@@ -119,10 +134,10 @@ inline void unOp(const std::string& op, NExpressionNode* a, NExpressionNode* res
 	res->setChildren({ a });
 }
 
-inline void fnCall(const std::string& fn, NExpressionNode* a, NExpressionNode* b, NExpressionNode* res)
+inline void fnCall(const std::string& fn, const std::initializer_list<NExpressionNode*> c, NExpressionNode* res)
 {
 	res->op = { NOpType::FunctionCall, fn };
-	res->setChildren({ a, b });
+	res->setChildren(c);
 }
 
 inline void var(const std::string& v, NExpressionNode* res)
@@ -136,9 +151,9 @@ inline NExpressionNode* sub(NExpressionNode* a, NExpressionNode* b) { return bin
 inline NExpressionNode* mul(NExpressionNode* a, NExpressionNode* b) { return binOp(a, "*", b); }
 inline NExpressionNode* div(NExpressionNode* a, NExpressionNode* b) { return binOp(a, "/", b); }
 inline NExpressionNode* neg(NExpressionNode* a) { return unOp("-", a); }
-inline NExpressionNode* pow(NExpressionNode* a, NExpressionNode* b) { return fnCall("pow", a, b); }
-inline NExpressionNode* ln(NExpressionNode* a) { return fnCall("ln", a, nullptr); }
-inline NExpressionNode* exp(NExpressionNode* a) { return fnCall("exp", a, nullptr); }
+inline NExpressionNode* pow(NExpressionNode* a, NExpressionNode* b) { return fnCall("pow", { a, b }); }
+inline NExpressionNode* ln(NExpressionNode* a) { return fnCall("ln", { a }); }
+inline NExpressionNode* exp(NExpressionNode* a) { return fnCall("exp", { a }); }
 
 template<typename T, enable_if_opm_type<T> = true>
 inline NExpressionNode* constant(const T& a) { return new NExpressionNode{ std::move<NOperation>({NOpType::Constant, wrap<T>(a)}), {}}; }
@@ -150,9 +165,9 @@ inline void sub(NExpressionNode* a, NExpressionNode* b, NExpressionNode* res) { 
 inline void mul(NExpressionNode* a, NExpressionNode* b, NExpressionNode* res) { binOp(a, "*", b, res); }
 inline void div(NExpressionNode* a, NExpressionNode* b, NExpressionNode* res) { binOp(a, "/", b, res); }
 inline void neg(NExpressionNode* a, NExpressionNode* res) { unOp("-", a, res); }
-inline void pow(NExpressionNode* a, NExpressionNode* b, NExpressionNode* res) { fnCall("pow", a, b, res); }
-inline void ln(NExpressionNode* a, NExpressionNode* res) { fnCall("ln", a, nullptr, res); }
-inline void exp(NExpressionNode* a, NExpressionNode* res) { fnCall("exp", a, nullptr, res); }
+inline void pow(NExpressionNode* a, NExpressionNode* b, NExpressionNode* res) { fnCall("pow", { a, b }, res); }
+inline void ln(NExpressionNode* a, NExpressionNode* res) { fnCall("ln", { a }, res); }
+inline void exp(NExpressionNode* a, NExpressionNode* res) { fnCall("exp", { a }, res); }
 
 inline bool is(const NExpressionNode* node, NOpType type, const std::string& payload) { return node->op.type == type && node->op.payload == payload; }
 inline bool is_add(const NExpressionNode* node) { return is(node, NOpType::Binary, "+"); }

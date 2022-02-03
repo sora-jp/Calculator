@@ -100,4 +100,5 @@ public:
 	bool IsConstant(const NExpressionNode* node) const;
 	OpmValue ConstantEval(const NExpressionNode* node) const;
 	static void Print(const NExpression& expr);
+	static std::string ToString(const NExpression& expr);
 };

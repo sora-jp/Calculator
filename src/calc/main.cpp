@@ -7,7 +7,6 @@
 
 #include "OpmNum.hpp"
 #include <StackBindings.hpp>
-#include <cpp-terminal/base.hpp>
 
 #include "PrecisionTest.h"
 #include "OpmRand.hpp"
@@ -41,7 +40,8 @@ std::ostream& operator<<(std::ostream& s, const OpmValue& n)
 
 struct HistoryData
 {
-	std::string expr;
+	std::string input;
+	NExpression expr;
 	OpmValue answer;
 };
 
@@ -53,15 +53,25 @@ Element renderStack()
 
 	for (int i = 0; i < s_history.size(); i++)
 	{
-		char s[256] = {};
-		format(s_history[i].answer, s, FormatMode::Standard);
+		std::string ss;
+		if (s_history[i].answer.type() == ValueType::Invalid) 
+		{
+			ss = NExpressionParser::ToString(s_history[i].expr);
+		}
+		else 
+		{
+			char s[256] = {};
+			format(s_history[i].answer, s, FormatMode::Standard);
+			ss = s;
+		}
+
 		elems.push_back(
 			vbox({
-				text(s_history[i].expr),
+				text(s_history[i].input),
 				hbox(
 					text(L"\u2570\u2500[" + std::to_wstring(s_history.size() - i) + L"]") | color(Color::GrayDark),
 					text(L"\u2500\u2500> ") | color(Color::GrayDark),
-					text(s) | color(Color::Green)
+					text(ss) | color(Color::Green)
 				),
 				text(""),
 				separatorLight() | color(Color::GrayDark),
@@ -85,34 +95,44 @@ int main(int argc, char** argv)
 	NExpressionContext ctx;
 	ctx.set(OpmComplex(0, 1), "i");
 	ctx.set(Constants::pi, "pi");
-
-	auto a = Expression::parse("2 + 3 - 4 + 5 - 6");
 	
-
-	return 0;
 	std::string cmd;
 	InputOption opt;
 	opt.on_enter = [&]
 	{
+		bool de = false;
+		if (cmd.substr(0, 3) == "/d ")
+		{
+			de = true;
+			cmd = cmd.substr(3);
+		}
+
 		auto expr = Expression::parse(cmd);
+		if (de)
+		{
+			NDerivative d;
+			NSimplify s;
+			expr = Expression::rewrite(Expression::rewrite(expr, d), s);
+		}
+
 		auto ce = Expression::compile(expr);
 		if (expr.type == NExpressionType::FunctionDefinition)
 		{
 			std::string fnName = expr.fnData.front();
 
 			ctx.set(FunctionImplementation{ expr, ce, std::vector<std::string> {expr.fnData.begin() + 1, expr.fnData.end()} }, FunctionDefinition{ fnName, static_cast<uint32_t>(expr.fnData.size() - 1) });
-			s_history.push_back({ cmd, wrap(Constants::nan) });
+			s_history.push_back({ cmd, expr, OpmValue {} });
 		}
 		else if (expr.type == NExpressionType::VariableAssignment)
 		{
 			auto res = ce.exec(ctx);
 			ctx.set(ce.exec(ctx), expr.varName);
-			s_history.push_back({ cmd, res });
+			s_history.push_back({ cmd, expr, res });
 		}
 		else
 		{
 			auto res = ce.exec(ctx);
-			s_history.push_back({ cmd, res });
+			s_history.push_back({ cmd, expr, res });
 		}
 
 		cmd.clear();
