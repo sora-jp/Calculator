@@ -54,6 +54,7 @@ public:
     EvalContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     ExpressionContext *expression();
+    antlr4::tree::TerminalNode *EOF();
     AssignmentContext *assignment();
     FunctionDefContext *functionDef();
 

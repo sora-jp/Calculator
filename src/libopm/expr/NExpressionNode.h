@@ -88,10 +88,10 @@ enum class NExpressionType
 
 struct NExpression
 {
-	NExpressionType type;
+	NExpressionType type = NExpressionType::Expression;
 	std::string varName;
-	std::vector<std::string> fnData;
-	NExpressionNode* top;
+	std::vector<std::string> fnData {};
+	NExpressionNode* top = nullptr;
 
 	NExpression() = default;
 	NExpression(NExpressionType type, const std::string& varName, const std::vector<std::string>& fnData, NExpressionNode* top) : type(type), varName(varName), fnData(fnData), top(top) {}

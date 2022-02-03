@@ -3,17 +3,17 @@
 
 namespace Expression
 {
-	NExpression parse(const std::string& str);
+	NExpression parse(NErrorCollection& outErrors, const std::string& str);
 	NExpression rewrite(const NExpression& expr, NExpressionRewriter& writer);
 
 	template<typename T, typename... Args, std::enable_if_t<std::is_base_of_v<NExpressionRewriter, T> && std::is_constructible_v<T, Args...>, bool> = true>
-	NExpression rewrite(const NExpression expr, Args&&... args)
+	NExpression rewrite(const NExpression& expr, Args&&... args)
 	{
 		T rewriter(args...);
 		return rewrite(expr, rewriter);
 	}
 
-	NCompiledExpression compile(const NExpression& expr);
+	NCompiledExpression compile(NErrorCollection& outErrors, const NExpression& expr);
 
 	bool isConstant(const NExpressionNode* node);
 	OpmValue constantEval(const NExpressionNode* node);

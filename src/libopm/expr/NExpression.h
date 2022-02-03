@@ -16,6 +16,25 @@ struct FunctionDefinition
 	uint32_t paramCount;
 };
 
+enum class ErrorType
+{
+	Invalid, Info, Warning, Error
+};
+
+enum class ErrorClass
+{
+	Parsing, Conversion, Binding, Compilation, Evaluation
+};
+
+struct NExpressionError
+{
+	ErrorType type;
+	ErrorClass cls;
+	std::string err;
+};
+
+typedef std::vector<NExpressionError> NErrorCollection;
+
 class NExpressionContext
 {
 	friend struct NCompiledOp;
@@ -25,7 +44,7 @@ class NExpressionContext
 public:
 	NExpressionContext() = default;
 	OpmValue get(const std::string& s) const { return m_variables.at(s); }
-	const FunctionImplementation& get(const FunctionDefinition& f) const;
+	const FunctionImplementation* get(const FunctionDefinition& f) const;
 	void set(const OpmNum& val, const std::string& s) { m_variables[s] = wrap(val); }
 	void set(const OpmComplex& val, const std::string& s) { m_variables[s] = wrap(val); }
 	void set(const OpmValue& val, const std::string& s) { m_variables[s] = val; }
@@ -51,7 +70,7 @@ struct NCompiledOp
 	NCompiledOp(BinaryOp op) : type(NOpType::Binary), binary(op) {}
 	NCompiledOp(FunctionDefinition fn) : type(NOpType::FunctionCall), fn(fn) {}
 
-	void operator()(const NExpressionContext& ctx, OpmStack<EXPR_STACK_DEPTH>& stack) const;
+	void operator()(NErrorCollection& outErrors, const NExpressionContext& ctx, OpmStack<EXPR_STACK_DEPTH>& stack) const;
 };
 
 class NCompiledExpression
@@ -60,7 +79,7 @@ class NCompiledExpression
 	std::vector<NCompiledOp> m_ops;
 
 public:
-	OpmValue exec(const NExpressionContext& ctx) const;
+	OpmValue exec(NErrorCollection& outErrors, const NExpressionContext& ctx) const;
 };
 
 class NExpressionRewriter
@@ -83,7 +102,7 @@ class NExpressionParser
 	std::unordered_map<std::string, UnaryOp> m_unary;
 	std::unordered_map<std::string, BinaryOp> m_binary;
 
-	void compileRecursive(std::vector<NCompiledOp>& ops, const NExpressionNode* node) const;
+	void compileRecursive(NErrorCollection& errs, std::vector<NCompiledOp>& ops, const NExpressionNode* node) const;
 	bool ConstantFoldR(NExpressionNode* node) const;
 	void ConstantFoldAll(NExpressionNode* node) const;
 
@@ -93,9 +112,9 @@ public:
 	void registerFn(const std::string& name, UnaryOp val) { m_unary[name] = val; }
 	void registerFn(const std::string& name, BinaryOp val) { m_binary[name] = val; }
 
-	NExpression parse(const std::string& in) const;
+	NExpression parse(NErrorCollection& outErrors, const std::string& in) const;
 	NExpression rewrite(NExpressionRewriter& rew, const NExpression& expr) const;
-	NCompiledExpression compile(const NExpression& expr) const;
+	NCompiledExpression compile(NErrorCollection& outErrors, const NExpression& expr) const;
 
 	bool IsConstant(const NExpressionNode* node) const;
 	OpmValue ConstantEval(const NExpressionNode* node) const;

@@ -31,9 +31,9 @@ static const NExpressionParser s_parser
 	{"log", log}
 });
 
-NExpression Expression::parse(const std::string& str)
+NExpression Expression::parse(NErrorCollection& outErrors, const std::string& str)
 {
-	return s_parser.parse(str);
+	return s_parser.parse(outErrors, str);
 }
 
 NExpression Expression::rewrite(const NExpression& expr, NExpressionRewriter& writer)
@@ -41,9 +41,9 @@ NExpression Expression::rewrite(const NExpression& expr, NExpressionRewriter& wr
 	return s_parser.rewrite(writer, expr);
 }
 
-NCompiledExpression Expression::compile(const NExpression& expr)
+NCompiledExpression Expression::compile(NErrorCollection& outErrors, const NExpression& expr)
 {
-	return s_parser.compile(expr);
+	return s_parser.compile(outErrors, expr);
 }
 
 bool Expression::isConstant(const NExpressionNode* node)

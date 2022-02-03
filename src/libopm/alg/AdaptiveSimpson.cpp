@@ -10,7 +10,8 @@ struct IntSettings
     OpmNum eval(const OpmNum& inp)
     {
         ctx.set(inp, var);
-        auto res = expr.exec(ctx);
+        //FIXME
+        auto res = wrap(1e0_opm);//expr.exec(ctx);
         if (res.type() == ValueType::Real)
         {
             auto rt = *unwrap<OpmNum>(res);

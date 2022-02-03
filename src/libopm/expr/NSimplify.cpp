@@ -65,6 +65,14 @@ NExpressionNode* NSimplify::rewriteInternal(const NExpressionNode* node)
 		if (Expression::isConstant(node->child(0)) && is_zero(Expression::constantEval(node->child(0)))) return constant(0e0_opm);
 		if (Expression::isConstant(node->child(1)) && is_neg_one(Expression::constantEval(node->child(1)))) return neg(rewriteInternal(node->child(0)));
 	}
+	if (is_pow(node))
+	{
+		if (Expression::isConstant(node->child(0)) && is_one(Expression::constantEval(node->child(0)))) return constant(1e0_opm);
+		if (Expression::isConstant(node->child(0)) && is_zero(Expression::constantEval(node->child(0)))) return constant(0e0_opm);
+
+		if (Expression::isConstant(node->child(1)) && is_one(Expression::constantEval(node->child(1)))) return rewriteInternal(node->child(0));
+		if (Expression::isConstant(node->child(1)) && is_zero(Expression::constantEval(node->child(1)))) return constant(1e0_opm);
+	}
 	
 	auto* o = new NExpressionNode(node->op);
 	o->children.reserve(node->children.size());

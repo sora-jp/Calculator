@@ -41,20 +41,49 @@ std::ostream& operator<<(std::ostream& s, const OpmValue& n)
 struct HistoryData
 {
 	std::string input;
+	NErrorCollection errs;
 	NExpression expr;
 	OpmValue answer;
 };
 
 std::vector<HistoryData> s_history;
 
+std::string tostring(ErrorClass cls)
+{
+	if (cls == ErrorClass::Parsing) return "Parsing";
+	if (cls == ErrorClass::Evaluation) return "Evaluation";
+	if (cls == ErrorClass::Compilation) return "Compilation";
+	if (cls == ErrorClass::Binding) return "Binding";
+	if (cls == ErrorClass::Conversion) return "Conversion";
+	return "Unknown";
+}
+
+std::string tostring(ErrorType type)
+{
+	if (type == ErrorType::Invalid) return "Invalid";
+	if (type == ErrorType::Info) return "Info";
+	if (type == ErrorType::Warning) return "Warning";
+	if (type == ErrorType::Error) return "Error";
+}
+
+Decorator getcolor(ErrorType type)
+{
+	if (type == ErrorType::Invalid) return color(Color::GrayDark);
+	if (type == ErrorType::Info) return color(Color::GrayDark);
+	if (type == ErrorType::Warning) return color(Color::Yellow);
+	if (type == ErrorType::Error) return color(Color::Red);
+}
+
 Element renderStack()
 {
 	Elements elems;
-
-	for (int i = 0; i < s_history.size(); i++)
+	int start = static_cast<int32_t>(s_history.size()) - 5;
+	if (start < 0) start = 0;
+	for (int i = start; i < s_history.size(); i++)
 	{
 		std::string ss;
-		if (s_history[i].answer.type() == ValueType::Invalid) 
+		if (!s_history[i].errs.empty()) {}
+		else if (s_history[i].answer.type() == ValueType::Invalid) 
 		{
 			ss = NExpressionParser::ToString(s_history[i].expr);
 		}
@@ -65,14 +94,25 @@ Element renderStack()
 			ss = s;
 		}
 
+		auto elem = hbox(
+			text(L"\u2570\u2500[" + std::to_wstring(s_history.size() - i) + L"]") | color(Color::GrayDark),
+			text(L"\u2500\u2500> ") | color(Color::GrayDark),
+			text(ss) | color(Color::Green)
+		);
+		if (!s_history[i].errs.empty())
+		{
+			Elements errs;
+			for (auto& e : s_history[i].errs)
+			{
+				errs.push_back(text(tostring(e.type) + " - " + tostring(e.cls) + ": " + e.err) | getcolor(e.type));
+			}
+			elem = vbox(std::move(errs));
+		}
+
 		elems.push_back(
 			vbox({
 				text(s_history[i].input),
-				hbox(
-					text(L"\u2570\u2500[" + std::to_wstring(s_history.size() - i) + L"]") | color(Color::GrayDark),
-					text(L"\u2500\u2500> ") | color(Color::GrayDark),
-					text(ss) | color(Color::Green)
-				),
+				elem,
 				text(""),
 				separatorLight() | color(Color::GrayDark),
 				text("")
@@ -106,33 +146,38 @@ int main(int argc, char** argv)
 			de = true;
 			cmd = cmd.substr(3);
 		}
-
-		auto expr = Expression::parse(cmd);
-		if (de)
+		auto errs = NErrorCollection{};
+		auto expr = Expression::parse(errs, cmd);
+		if (de && errs.empty())
 		{
 			NDerivative d;
 			NSimplify s;
-			expr = Expression::rewrite(Expression::rewrite(expr, d), s);
+			expr = Expression::rewrite(expr, d);
+			expr = Expression::rewrite(expr, s);
 		}
 
-		auto ce = Expression::compile(expr);
-		if (expr.type == NExpressionType::FunctionDefinition)
+		auto ce = Expression::compile(errs, expr);
+		if (!errs.empty())
+		{
+			s_history.push_back({ cmd, errs, NExpression{}, wrap(Constants::nan) });
+		}
+		else if (expr.type == NExpressionType::FunctionDefinition)
 		{
 			std::string fnName = expr.fnData.front();
 
 			ctx.set(FunctionImplementation{ expr, ce, std::vector<std::string> {expr.fnData.begin() + 1, expr.fnData.end()} }, FunctionDefinition{ fnName, static_cast<uint32_t>(expr.fnData.size() - 1) });
-			s_history.push_back({ cmd, expr, OpmValue {} });
+			s_history.push_back({ cmd, errs, expr, OpmValue {} });
 		}
 		else if (expr.type == NExpressionType::VariableAssignment)
 		{
-			auto res = ce.exec(ctx);
-			ctx.set(ce.exec(ctx), expr.varName);
-			s_history.push_back({ cmd, expr, res });
+			auto res = ce.exec(errs, ctx);
+			ctx.set(res, expr.varName);
+			s_history.push_back({ cmd, errs, expr, res });
 		}
 		else
 		{
-			auto res = ce.exec(ctx);
-			s_history.push_back({ cmd, expr, res });
+			auto res = ce.exec(errs, ctx);
+			s_history.push_back({ cmd, errs, expr, res });
 		}
 
 		cmd.clear();

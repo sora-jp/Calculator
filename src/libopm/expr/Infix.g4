@@ -1,8 +1,8 @@
 grammar Infix;
 
-eval : expression
-	 | assignment
-	 | functionDef
+eval : expression EOF
+	 | assignment EOF
+	 | functionDef EOF
 	 ;
 
 assignment
@@ -26,6 +26,7 @@ expression
 
 term
     : factor
+	| factor term
     | term MULT factor
     | term DIV factor
     | term MOD factor
