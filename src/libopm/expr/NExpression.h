@@ -4,6 +4,7 @@
 #include "../rt_poly/OpmDynamic.h"
 #include "NExpressionNode.h"
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "StackBindings.hpp"
@@ -38,12 +39,15 @@ typedef std::vector<NExpressionError> NErrorCollection;
 class NExpressionContext
 {
 	friend struct NCompiledOp;
+	std::function<NExpression& (int)> m_resolveReference;
 	std::map<std::string, OpmValue> m_variables;
 	std::vector<std::pair<FunctionDefinition, FunctionImplementation>> m_userFuncs;
 
 public:
 	NExpressionContext() = default;
+	NExpressionContext(std::function<NExpression&(int)> resolve) : m_resolveReference(std::move(resolve)) {}
 	OpmValue get(const std::string& s) const { return m_variables.at(s); }
+	NExpression& get(int histIdx) const { return m_resolveReference(histIdx); }
 	const FunctionImplementation* get(const FunctionDefinition& f) const;
 	void set(const OpmNum& val, const std::string& s) { m_variables[s] = wrap(val); }
 	void set(const OpmComplex& val, const std::string& s) { m_variables[s] = wrap(val); }
@@ -56,6 +60,7 @@ struct NCompiledOp
 	NOpType type;
 
 	std::string var;
+	int histIdx = 0;
 	OpmValue constant;
 	union
 	{
@@ -64,11 +69,12 @@ struct NCompiledOp
 	};
 	FunctionDefinition fn = {};
 
-	NCompiledOp(const std::string& var) : type(NOpType::Variable), var(var) {}
-	NCompiledOp(const OpmValue& constant) : type(NOpType::Constant), constant(constant) {}
+	NCompiledOp(const int idx) : type(NOpType::HistoryRef), histIdx(idx) {}
+	NCompiledOp(std::string var) : type(NOpType::Variable), var(std::move(var)) {}
+	NCompiledOp(OpmValue constant) : type(NOpType::Constant), constant(std::move(constant)) {}
 	NCompiledOp(UnaryOp op) : type(NOpType::Unary), unary(op) {}
 	NCompiledOp(BinaryOp op) : type(NOpType::Binary), binary(op) {}
-	NCompiledOp(FunctionDefinition fn) : type(NOpType::FunctionCall), fn(fn) {}
+	NCompiledOp(FunctionDefinition fn) : type(NOpType::FunctionCall), fn(std::move(fn)) {}
 
 	void operator()(NErrorCollection& outErrors, const NExpressionContext& ctx, OpmStack<EXPR_STACK_DEPTH>& stack) const;
 };
@@ -112,7 +118,7 @@ public:
 	void registerFn(const std::string& name, UnaryOp val) { m_unary[name] = val; }
 	void registerFn(const std::string& name, BinaryOp val) { m_binary[name] = val; }
 
-	NExpression parse(NErrorCollection& outErrors, const std::string& in) const;
+	NExpression parse(NErrorCollection& outErrors, const NExpressionContext& ctx, const std::string& in) const;
 	NExpression rewrite(NExpressionRewriter& rew, const NExpression& expr) const;
 	NCompiledExpression compile(NErrorCollection& outErrors, const NExpression& expr) const;
 

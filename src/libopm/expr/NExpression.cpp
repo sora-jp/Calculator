@@ -219,6 +219,7 @@ void NExpressionParser::compileRecursive(NErrorCollection& errs, std::vector<NCo
 
 	if (node->op.type == NOpType::Constant) ops.emplace_back(node->op.constant);
 	if (node->op.type == NOpType::Variable) ops.emplace_back(node->op.payload);
+	if (node->op.type == NOpType::HistoryRef) ops.emplace_back(node->op.histIndex);
 	if (node->op.type == NOpType::Unary) 
 	{
 		if (m_unary.find(node->op.payload) == m_unary.end())

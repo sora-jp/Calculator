@@ -5,17 +5,23 @@
 #include "antlr-gen/InfixParser.h"
 using namespace antlr4;
 
-void Convert(InfixParser::ExpressionContext* expr, NExpressionNode* node);
-void Convert(InfixParser::PrimaryContext* primary, NExpressionNode* node)
+void Convert(InfixParser::ExpressionContext* expr, NExpressionNode* node, const NExpressionContext& ctx);
+void Convert(InfixParser::PrimaryContext* primary, NExpressionNode* node, const NExpressionContext& ctx)
 {
 	if (auto* c = primary->constant(); c)
 		node->op = NOperation{ NOpType::Constant, wrap(parse(c->getText().c_str())) };
 
 	if (auto* h = primary->histref(); h)
-		node->op = NOperation{ NOpType::HistoryRef, h->INTEGER()->getText() };
+	{
+		const auto& expr = ctx.get(atoi(h->INTEGER()->getText().c_str()));
+		node->op = expr.top->op;
+		node->setChildren({});
+
+		for (const auto* c : expr.top->children) node->children.push_back(c->copy());
+	}
 
 	if (auto* e = primary->expression(); e)
-		Convert(e, node);
+		Convert(e, node, ctx);
 
 	if (auto* v = primary->variable(); v)
 		node->op = NOperation{ NOpType::Variable, v->getText() };
@@ -31,14 +37,14 @@ void Convert(InfixParser::PrimaryContext* primary, NExpressionNode* node)
 		for (auto* param : p->expression())
 		{
 			auto* n = new NExpressionNode();
-			Convert(param, n);
+			Convert(param, n, ctx);
 			node->children.push_back(n);
 		}
 	}
 }
 
-void Convert(InfixParser::FactorContext* factor, NExpressionNode* node);
-void Convert(InfixParser::SecondaryContext* secondary, NExpressionNode* node)
+void Convert(InfixParser::FactorContext* factor, NExpressionNode* node, const NExpressionContext& ctx);
+void Convert(InfixParser::SecondaryContext* secondary, NExpressionNode* node, const NExpressionContext& ctx)
 {
 	auto* opNode = secondary->POW();
 
@@ -50,16 +56,16 @@ void Convert(InfixParser::SecondaryContext* secondary, NExpressionNode* node)
 		node->setChildren({ lhs, rhs });
 		node->op = NOperation{ NOpType::FunctionCall, "pow" };
 
-		Convert(secondary->secondary(), lhs);
-		Convert(secondary->factor(), rhs);
+		Convert(secondary->secondary(), lhs, ctx);
+		Convert(secondary->factor(), rhs, ctx);
 	}
 	else
 	{
-		Convert(secondary->primary(), node);
+		Convert(secondary->primary(), node, ctx);
 	}
 }
 
-void Convert(InfixParser::FactorContext* factor, NExpressionNode* node)
+void Convert(InfixParser::FactorContext* factor, NExpressionNode* node, const NExpressionContext& ctx)
 {
 	auto* opNode = factor->PLUS();
 	if (!opNode) opNode = factor->MINUS();
@@ -71,15 +77,15 @@ void Convert(InfixParser::FactorContext* factor, NExpressionNode* node)
 		node->setChildren({ lhs });
 		node->op = NOperation{ NOpType::Unary, opNode->getText() };
 
-		Convert(factor->factor(), lhs);
+		Convert(factor->factor(), lhs, ctx);
 	}
 	else
 	{
-		Convert(factor->secondary(), node);
+		Convert(factor->secondary(), node, ctx);
 	}
 }
 
-void Convert(InfixParser::TermContext* term, NExpressionNode* node)
+void Convert(InfixParser::TermContext* term, NExpressionNode* node, const NExpressionContext& ctx)
 {
 	auto* opNode = term->DIV();
 	if (!opNode) opNode = term->MOD();
@@ -93,8 +99,8 @@ void Convert(InfixParser::TermContext* term, NExpressionNode* node)
 		node->setChildren({ lhs, rhs });
 		node->op = NOperation{ NOpType::Binary, opNode->getText() };
 
-		Convert(term->term(), lhs);
-		Convert(term->factor(), rhs);
+		Convert(term->term(), lhs, ctx);
+		Convert(term->factor(), rhs, ctx);
 	}
 	else if (term->term())
 	{
@@ -104,16 +110,16 @@ void Convert(InfixParser::TermContext* term, NExpressionNode* node)
 		node->setChildren({ lhs, rhs });
 		node->op = NOperation{ NOpType::Binary, "*" };
 
-		Convert(term->factor(), lhs);
-		Convert(term->term(), rhs);
+		Convert(term->factor(), lhs, ctx);
+		Convert(term->term(), rhs, ctx);
 	}
 	else
 	{
-		Convert(term->factor(), node);
+		Convert(term->factor(), node, ctx);
 	}
 }
 
-void Convert(InfixParser::ExpressionContext* expr, NExpressionNode* node)
+void Convert(InfixParser::ExpressionContext* expr, NExpressionNode* node, const NExpressionContext& ctx)
 {
 	auto* opNode = expr->PLUS();
 	if (!opNode) opNode = expr->MINUS();
@@ -126,12 +132,12 @@ void Convert(InfixParser::ExpressionContext* expr, NExpressionNode* node)
 		node->setChildren({ lhs, rhs });
 		node->op = NOperation{ NOpType::Binary, opNode->getText() };
 
-		Convert(expr->expression(), lhs);
-		Convert(expr->term(), rhs);
+		Convert(expr->expression(), lhs, ctx);
+		Convert(expr->term(), rhs, ctx);
 	}
 	else
 	{
-		Convert(expr->term(), node);
+		Convert(expr->term(), node, ctx);
 	}
 }
 
@@ -146,7 +152,7 @@ public:
 	}
 };
 
-NExpression NExpressionParser::parse(NErrorCollection& outErrors, const std::string& in) const
+NExpression NExpressionParser::parse(NErrorCollection& outErrors, const NExpressionContext& ctx, const std::string& in) const
 {
 	ANTLRInputStream stream(in);
 	InfixLexer lexer(&stream);
@@ -167,19 +173,19 @@ NExpression NExpressionParser::parse(NErrorCollection& outErrors, const std::str
 	{
 		expr.type = NExpressionType::VariableAssignment;
 		expr.varName = a->variable()->ID()->getText();
-		Convert(a->expression(), expr.top);
+		Convert(a->expression(), expr.top, ctx);
 	}
 	else if (auto* f = top->functionDef(); f)
 	{
 		expr.type = NExpressionType::FunctionDefinition;
 		expr.fnData.push_back(f->funcWVars()->ID()->getText());
 		for (uint32_t i = 0; i < f->funcWVars()->variable().size(); i++) expr.fnData.push_back(f->funcWVars()->variable(i)->ID()->getText());
-		Convert(f->expression(), expr.top);
+		Convert(f->expression(), expr.top, ctx);
 	}
 	else
 	{
 		expr.type = NExpressionType::Expression;
-		Convert(top->expression(), expr.top);
+		Convert(top->expression(), expr.top, ctx);
 	}
 	//std::cout << in << std::endl;
 	//Print(expr);

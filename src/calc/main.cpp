@@ -48,6 +48,12 @@ struct HistoryData
 
 std::vector<HistoryData> s_history;
 
+NExpression& getHistoryRef(int idx)
+{
+	if (idx <= 0) abort();
+	return s_history.at(s_history.size() - idx).expr;
+}
+
 std::string tostring(ErrorClass cls)
 {
 	if (cls == ErrorClass::Parsing) return "Parsing";
@@ -132,7 +138,7 @@ int main(int argc, char** argv)
 		if (exit) return res;
 	}
 
-	NExpressionContext ctx;
+	NExpressionContext ctx { getHistoryRef };
 	ctx.set(OpmComplex(0, 1), "i");
 	ctx.set(Constants::pi, "pi");
 	
@@ -147,7 +153,7 @@ int main(int argc, char** argv)
 			cmd = cmd.substr(3);
 		}
 		auto errs = NErrorCollection{};
-		auto expr = Expression::parse(errs, cmd);
+		auto expr = Expression::parse(errs, ctx, cmd);
 		if (de && errs.empty())
 		{
 			NDerivative d;

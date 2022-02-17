@@ -31,9 +31,9 @@ static const NExpressionParser s_parser
 	{"log", log}
 });
 
-NExpression Expression::parse(NErrorCollection& outErrors, const std::string& str)
+NExpression Expression::parse(NErrorCollection& outErrors, const NExpressionContext& ctx, const std::string& str)
 {
-	return s_parser.parse(outErrors, str);
+	return s_parser.parse(outErrors, ctx, str);
 }
 
 NExpression Expression::rewrite(const NExpression& expr, NExpressionRewriter& writer)

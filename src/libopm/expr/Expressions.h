@@ -3,7 +3,7 @@
 
 namespace Expression
 {
-	NExpression parse(NErrorCollection& outErrors, const std::string& str);
+	NExpression parse(NErrorCollection& outErrors, const NExpressionContext& ctx, const std::string& str);
 	NExpression rewrite(const NExpression& expr, NExpressionRewriter& writer);
 
 	template<typename T, typename... Args, std::enable_if_t<std::is_base_of_v<NExpressionRewriter, T> && std::is_constructible_v<T, Args...>, bool> = true>
