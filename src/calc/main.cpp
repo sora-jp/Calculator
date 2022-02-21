@@ -137,6 +137,10 @@ int main(int argc, char** argv)
 		const auto res = TestPrecision(argc, argv, exit);
 		if (exit) return res;
 	}
+	auto a = parse("0.5");
+	auto r = acos(a);
+	print(r);
+	return 0;
 
 	NExpressionContext ctx { getHistoryRef };
 	ctx.set(OpmComplex(0, 1), "i");

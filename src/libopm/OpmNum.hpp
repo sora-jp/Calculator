@@ -70,7 +70,7 @@ inline OpmNum::OpmNum(int32_t num): isNegative(false), isNan(false), isInfinity(
 	uint8_t digits[10]{};
 
 	auto cur = 0;
-	while (num > 10)
+	while (num >= 10)
 	{
 		const uint8_t r = num % 10;
 		num = num / 10;

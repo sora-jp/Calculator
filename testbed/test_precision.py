@@ -18,10 +18,8 @@ ULP = mpmath.mpf(10) ** mpmath.mpf(-DIGITS + 9)
 
 mpmath.mp.dps = DIGITS
 
-
 def gen_single(start: mpmath.mpf, norm_fac: mpmath.mpf, x: int):
     return start + norm_fac * x + norm_fac * mpmath.rand()
-
 
 def calc_error(actual, expected):
     if expected == 0:
@@ -47,7 +45,7 @@ def test_thread(args):
     return data
 
 
-def test(fn_name: str, fn, count: int, min: mpmath.mpf, max: mpmath.mpf):
+def test(fn_name: str, fn, pltdata, count: int, min: mpmath.mpf, max: mpmath.mpf):
     t_start = time.time()
     norm_fac = (max - min) / mpmath.mpf(count)
 
@@ -113,16 +111,10 @@ def test(fn_name: str, fn, count: int, min: mpmath.mpf, max: mpmath.mpf):
         t_diff = time.time() - t_start
         print(F"Test completed in {t_diff} seconds")
 
-        plt.ioff()
+        plt.subplot(pltdata)
+        plt.title(fn_name)
         plt.plot(xs, errs)
         #plt.plot(xs, ys)
         #plt.plot(xs, np.array([mpmath.mpmathify(x[0]) for x in calcres]))
-        plt.show()
-
-
-def testfun(x):
-    return mpmath.gamma(x)
-
-
-if __name__ == "__main__":
-    test("gamma", testfun, 150000, mpmath.mpf(1), mpmath.mpf(20))
+        #plt.show()
+        #plt.imsave(fn_name + ".png")

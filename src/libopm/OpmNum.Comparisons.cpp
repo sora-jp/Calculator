@@ -38,6 +38,7 @@ bool operator>(const OpmNum& a, const OpmNum& b)
 
 	if (a.isNegative != b.isNegative) return !a.isNegative;
 	if (a.exponent > b.exponent) return !a.isNegative;
+	if (b.exponent > a.exponent) return b.isNegative;
 	
 	for (auto i = 0u; i < GROUPS; i++) 
     {

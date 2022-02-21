@@ -2,6 +2,14 @@
 #include "Utils.hpp"
 #include "cordic/Tables.hpp"
 
+void kahan(OpmNum& accum, OpmNum& err, const OpmNum& add)
+{
+	auto y = add - err;
+	auto t = accum + y;
+	err = (t - accum) - y;
+	accum = t;
+}
+
 bool cordic_trig(const OpmNum& arg, OpmNum& ox, OpmNum& oy)
 {
 	oy = abs(arg);
