@@ -11,7 +11,8 @@ def acos(x): return mpmath.acos(x)
 def atan(x): return mpmath.atan(x)
 
 def exp(x): return mpmath.exp(x)
-def ln(x): return mpmath.ln(x)
+def ln(x):  return mpmath.ln(x)
+def inv(x): return mpmath.mpf(1) / x
 
 TESTS = [
     ("sin", sin, -mpmath.pi, mpmath.pi, 331),
@@ -22,6 +23,7 @@ TESTS = [
     ("atan", atan, mpmath.mpf(-100), mpmath.mpf(100), 336),
     ("ln", ln, mpmath.mpf(0.1), mpmath.mpf(100), 337),
     ("exp", exp, mpmath.mpf(-100), mpmath.mpf(100), 338),
+    ("inv", inv, mpmath.mpf(1), mpmath.mpf(10), 339)
 ]
 
 def run_tests():
