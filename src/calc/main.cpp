@@ -137,10 +137,6 @@ int main(int argc, char** argv)
 		const auto res = TestPrecision(argc, argv, exit);
 		if (exit) return res;
 	}
-	auto a = parse("0.5");
-	auto r = acos(a);
-	print(r);
-	return 0;
 
 	NExpressionContext ctx { getHistoryRef };
 	ctx.set(OpmComplex(0, 1), "i");
@@ -151,19 +147,29 @@ int main(int argc, char** argv)
 	opt.on_enter = [&]
 	{
 		bool de = false;
+		bool se = false;
+		std::string inp = cmd;
 		if (cmd.substr(0, 3) == "/d ")
 		{
-			de = true;
-			cmd = cmd.substr(3);
+			se = de = true;
+			inp = cmd.substr(3);
+		}
+		if (cmd.substr(0, 3) == "/s ")
+		{
+			se = true;
+			inp = cmd.substr(3);
 		}
 		auto errs = NErrorCollection{};
-		auto expr = Expression::parse(errs, ctx, cmd);
+		auto expr = Expression::parse(errs, ctx, inp);
 		if (de && errs.empty())
 		{
 			NDerivative d;
+			expr = Expression::rewrite(expr, ctx, d);
+		}
+		if (se && errs.empty()) 
+		{
 			NSimplify s;
-			expr = Expression::rewrite(expr, d);
-			expr = Expression::rewrite(expr, s);
+			expr = Expression::rewrite(expr, ctx, s);
 		}
 
 		auto ce = Expression::compile(errs, expr);

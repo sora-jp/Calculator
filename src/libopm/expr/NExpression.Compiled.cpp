@@ -54,9 +54,18 @@ void NExpressionContext::set(const FunctionImplementation& val, const FunctionDe
 
 const FunctionImplementation* NExpressionContext::get(const FunctionDefinition& f) const
 {
-	for (auto& v : m_userFuncs)
+	for (const auto& v : m_userFuncs)
 	{
 		if (v.first.paramCount == f.paramCount && v.first.name == f.name) return &v.second;
 	}
 	return nullptr;
+}
+
+bool NExpressionContext::has(const FunctionDefinition& f) const
+{
+	for (const auto& v : m_userFuncs)
+	{
+		if (v.first.paramCount == f.paramCount && v.first.name == f.name) return true;
+	}
+	return false;
 }

@@ -36,9 +36,9 @@ NExpression Expression::parse(NErrorCollection& outErrors, const NExpressionCont
 	return s_parser.parse(outErrors, ctx, str);
 }
 
-NExpression Expression::rewrite(const NExpression& expr, NExpressionRewriter& writer)
+NExpression Expression::rewrite(const NExpression& expr, const NExpressionContext& ctx, NExpressionRewriter& writer)
 {
-	return s_parser.rewrite(writer, expr);
+	return s_parser.rewrite(writer, ctx, expr);
 }
 
 NCompiledExpression Expression::compile(NErrorCollection& outErrors, const NExpression& expr)

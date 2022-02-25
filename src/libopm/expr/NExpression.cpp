@@ -204,10 +204,10 @@ void NExpressionParser::Print(const NExpression& expr)
 	std::cout << std::endl;
 }
 
-NExpression NExpressionParser::rewrite(NExpressionRewriter& rew, const NExpression& expr) const
+NExpression NExpressionParser::rewrite(NExpressionRewriter& rew, const NExpressionContext& ctx, const NExpression& expr) const
 {
 	NExpression output = {expr.type, expr.varName, expr.fnData, nullptr};
-	output.top = rew.rewrite(expr.top);
+	output.top = rew.rewrite(ctx, expr.top);
 	ConstantFoldAll(output.top);
 	return output;
 }

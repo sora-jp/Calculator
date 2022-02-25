@@ -49,6 +49,10 @@ public:
 	OpmValue get(const std::string& s) const { return m_variables.at(s); }
 	NExpression& get(int histIdx) const { return m_resolveReference(histIdx); }
 	const FunctionImplementation* get(const FunctionDefinition& f) const;
+
+	bool has(const std::string& s) const { return m_variables.find(s) != m_variables.end(); }
+	bool has(const FunctionDefinition& f) const;
+
 	void set(const OpmNum& val, const std::string& s) { m_variables[s] = wrap(val); }
 	void set(const OpmComplex& val, const std::string& s) { m_variables[s] = wrap(val); }
 	void set(const OpmValue& val, const std::string& s) { m_variables[s] = val; }
@@ -93,7 +97,7 @@ class NExpressionRewriter
 	friend class NExpressionParser;
 public:
 	virtual ~NExpressionRewriter() = default;
-	virtual NExpressionNode* rewrite(const NExpressionNode* node) = 0;
+	virtual NExpressionNode* rewrite(const NExpressionContext& ctx, const NExpressionNode* node) = 0;
 };
 
 struct FunctionImplementation
@@ -119,7 +123,7 @@ public:
 	void registerFn(const std::string& name, BinaryOp val) { m_binary[name] = val; }
 
 	NExpression parse(NErrorCollection& outErrors, const NExpressionContext& ctx, const std::string& in) const;
-	NExpression rewrite(NExpressionRewriter& rew, const NExpression& expr) const;
+	NExpression rewrite(NExpressionRewriter& rew, const NExpressionContext& ctx, const NExpression& expr) const;
 	NCompiledExpression compile(NErrorCollection& outErrors, const NExpression& expr) const;
 
 	bool IsConstant(const NExpressionNode* node) const;

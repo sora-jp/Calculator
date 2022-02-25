@@ -27,7 +27,7 @@ bool is_neg_one(const OpmValue& val)
 }
 
 // https://stackoverflow.com/questions/7540227/strategies-for-simplifying-math-expressions
-NExpressionNode* NSimplify::rewrite(const NExpressionNode* node)
+NExpressionNode* NSimplify::rewrite(const NExpressionContext& ctx, const NExpressionNode* node)
 {
 	NExpressionNode* cur = node->copy();
 	while (true)
