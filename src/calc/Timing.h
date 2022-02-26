@@ -42,3 +42,5 @@ long double Time(T(*fn)(const T&, const T&), const T& min, const T& max, uint32_
 
 	return d / (1000000.0l * iters);
 }
+
+void TimeAll();

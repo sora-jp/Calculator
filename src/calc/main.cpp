@@ -131,6 +131,9 @@ Element renderStack()
 
 int main(int argc, char** argv)
 {
+	//TimeAll();
+	//return 0;
+
 	if (argc > 1)
 	{
 		bool exit;
