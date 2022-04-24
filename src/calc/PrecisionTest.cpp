@@ -11,7 +11,13 @@ const std::map<std::string, OpmNum(*)(const OpmNum&)> fnMap =
 	{"exp", &exp},
 	{"sin", &sin},
 	{"cos", &cos},
-	{"tan", &tan}
+	{"tan", &tan},
+	{"atan", &atan},
+	{"asin", &asin},
+	{"acos", &acos},
+	{"inv", &invert},
+	{"inv3", &invert3},
+	{"gamma", &gamma}
 };
 
 inline OpmNum get()
@@ -46,6 +52,7 @@ int TestPrecision(int argc, char** argv, bool& exit)
 	{
 		std::string targetFn;
 		std::cin >> targetFn;
+		//targetFn = targetFn.substr(0, targetFn.size() - 1);
 
 		auto* const fnPtr = fnMap.at(targetFn);
 		

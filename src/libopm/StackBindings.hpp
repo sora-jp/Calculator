@@ -1,5 +1,5 @@
 #pragma once
-#include "OpmNum.hpp"
+#include "rt_poly/OpmValue.h"
 #include <functional>
 #include <type_traits>
 #include <array>
@@ -8,10 +8,10 @@ template<int Size>
 class OpmStack
 {
 public:
-	OpmNum numbers[Size] {};
+	OpmValue numbers[Size] {};
 	int m_sp = 0;
 
-	const OpmNum& Pop()
+	const OpmValue& Pop()
 	{
 		if (m_sp <= 0) return numbers[0];
 		
@@ -19,7 +19,7 @@ public:
 		return numbers[m_sp];
 	}
 	
-	void Push(const OpmNum& num)
+	void Push(const OpmValue& num)
 	{
 		if (m_sp < 0) m_sp = 0;
 		
@@ -27,7 +27,7 @@ public:
 		{
 			for (int i = 0; i < Size - 1; i++)
 			{
-				numbers[i] = numbers[i + 1];
+				numbers[i] = std::move(numbers[i + 1]);
 			}
 			numbers[Size - 1] = num;
 		}
@@ -40,5 +40,5 @@ public:
 	}
 
 	[[nodiscard]] int StackSize() const { return m_sp; }
-	const OpmNum& operator[](int idx) const { return numbers[idx]; }
+	const OpmValue& operator[](int idx) const { return numbers[idx]; }
 };

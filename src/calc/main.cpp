@@ -1,4 +1,4 @@
-#include <cstring>
+﻿#include <cstring>
 #include <iostream>
 #include <chrono>
 #include <functional>
@@ -8,134 +8,276 @@
 #include "OpmNum.hpp"
 #include <StackBindings.hpp>
 
-#include "Expressions.hpp"
 #include "PrecisionTest.h"
 #include "OpmRand.hpp"
 #include "Timing.h"
+#include "cordic/Tables.hpp"
+#include "expr/Expressions.h"
+#include "expr/NDerivative.h"
+#include "rt_poly/OpmDynamic.h"
+#include "expr/NExpression.h"
+#include "expr/NSimplify.h"
+#include "alg/Algorithm.h"
 
-#define TIMER_BEGIN(timer) auto _##timer##_1 = std::chrono::steady_clock::now()
-#define TIMER_END(timer) auto _##timer##_2 = std::chrono::steady_clock::now()
-#define TIME(timer) (std::chrono::duration<double, std::milli>(_##timer##_2 - _##timer##_1).count())
+#include "ftxui/component/captured_mouse.hpp"  // for ftxui
+#include "ftxui/component/component.hpp"       // for Input, Renderer, Vertical
+#include "ftxui/component/component_base.hpp"  // for ComponentBase
+#include "ftxui/component/component_options.hpp"  // for InputOption
+#include "ftxui/component/screen_interactive.hpp"  // for Component, ScreenInteractive
+#include "ftxui/dom/elements.hpp"  // for text, hbox, separator, Element, operator|, vbox, border
+#include "ftxui/util/ref.hpp"  // for Ref
 
-#define CALC_FN(s, f) {s, [](auto& stack) { f; }},
-std::map<std::string, void(*)(OpmStack<10>&)> cfnMap = 
+using namespace ftxui;
+
+std::ostream& operator<<(std::ostream& s, const OpmValue& n)
 {
-	CALC_FN("+",     stack.Push(stack.Pop() + stack.Pop()))
-	CALC_FN("-",     stack.Push(stack.Pop() - stack.Pop()))
-	CALC_FN("*",     stack.Push(stack.Pop() * stack.Pop()))
-	CALC_FN("/",     stack.Push(stack.Pop() / stack.Pop()))
-	
-	CALC_FN("ln",    stack.Push(ln   (stack.Pop()).roundToNearest()))
-	CALC_FN("log2",  stack.Push(log2 (stack.Pop()).roundToNearest()))
-	CALC_FN("log10", stack.Push(log10(stack.Pop()).roundToNearest()))
-	CALC_FN("log",   stack.Push(log  (stack.Pop(), stack.Pop()).roundToNearest()))
-	
-	CALC_FN("exp",   stack.Push(exp  (stack.Pop()).roundToNearest()))
-	CALC_FN("exp2",  stack.Push(exp2 (stack.Pop()).roundToNearest()))
-	CALC_FN("exp10", stack.Push(exp10(stack.Pop()).roundToNearest()))
-	CALC_FN("pow",   stack.Push(pow  (stack.Pop(), stack.Pop()).roundToNearest()))
+	char o[256] = {};
+	format(n, o, FormatMode::Standard);
+	s << o;
 
-	CALC_FN("sin",   stack.Push(sin(stack.Pop()).roundToNearest()))
-	CALC_FN("cos",   stack.Push(cos(stack.Pop()).roundToNearest()))
-	CALC_FN("tan",   stack.Push(tan(stack.Pop()).roundToNearest()))
+	return s;
+}
+
+struct HistoryData
+{
+	std::string input;
+	NErrorCollection errs;
+	NExpression expr;
+	OpmValue answer;
 };
+
+std::vector<HistoryData> s_history;
+
+NExpression& getHistoryRef(int idx)
+{
+	if (idx <= 0) abort();
+	return s_history.at(s_history.size() - idx).expr;
+}
+
+std::string tostring(ErrorClass cls)
+{
+	if (cls == ErrorClass::Parsing) return "Parsing";
+	if (cls == ErrorClass::Evaluation) return "Evaluation";
+	if (cls == ErrorClass::Compilation) return "Compilation";
+	if (cls == ErrorClass::Binding) return "Binding";
+	if (cls == ErrorClass::Conversion) return "Conversion";
+	return "Unknown";
+}
+
+std::string tostring(ErrorType type)
+{
+	if (type == ErrorType::Invalid) return "Invalid";
+	if (type == ErrorType::Info) return "Info";
+	if (type == ErrorType::Warning) return "Warning";
+	if (type == ErrorType::Error) return "Error";
+}
+
+Decorator getcolor(ErrorType type)
+{
+	if (type == ErrorType::Invalid) return color(Color::GrayDark);
+	if (type == ErrorType::Info) return color(Color::GrayDark);
+	if (type == ErrorType::Warning) return color(Color::Yellow);
+	if (type == ErrorType::Error) return color(Color::Red);
+}
+
+Element renderStack()
+{
+	Elements elems;
+	int start = static_cast<int32_t>(s_history.size()) - 5;
+	if (start < 0) start = 0;
+	for (int i = start; i < s_history.size(); i++)
+	{
+		std::string ss;
+		if (!s_history[i].errs.empty()) {}
+		else if (s_history[i].answer.type() == ValueType::Invalid) 
+		{
+			ss = NExpressionParser::ToString(s_history[i].expr);
+		}
+		else 
+		{
+			char s[256] = {};
+			format(s_history[i].answer, s, FormatMode::Standard);
+			ss = s;
+		}
+
+		auto elem = hbox(
+			text(L"\u2570\u2500[" + std::to_wstring(s_history.size() - i) + L"]") | color(Color::GrayDark),
+			text(L"\u2500\u2500> ") | color(Color::GrayDark),
+			text(ss) | color(Color::Green)
+		);
+		if (!s_history[i].errs.empty())
+		{
+			Elements errs;
+			for (auto& e : s_history[i].errs)
+			{
+				errs.push_back(text(tostring(e.type) + " - " + tostring(e.cls) + ": " + e.err) | getcolor(e.type));
+			}
+			elem = vbox(std::move(errs));
+		}
+
+		elems.push_back(
+			vbox({
+				text(s_history[i].input),
+				elem,
+				text(""),
+				separatorLight() | color(Color::GrayDark),
+				text("")
+			})
+		);
+	}
+
+	return vbox(std::move(elems));
+}
 
 int main(int argc, char** argv)
 {
-	//if (argc > 1)
-	//{
-	//	bool exit;
-	//	const auto res = TestPrecision(argc, argv, exit);
-	//	if (exit) return res;
-	//}
-
-	print(-1e7_opm);
-	print(1e7_opm);
-
-	std::cout << Time(operator+, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;
-	std::cout << Time(operator*, -1e7_opm, 1e7_opm, 1000000)  * 1000 << std::endl;
-	std::cout << Time(invert,  1e0_opm, 1e1_opm, 100000) * 1000 << std::endl;
-	std::cout << Time(invert3, 1e0_opm, 1e1_opm, 100000) * 1000 << std::endl;
-	
-	//ExpressionParser parser;
-	//parser.RegisterFn("ln", ln);
-	//parser.RegisterFn("exp", exp);
-	//parser.RegisterFn("pow", pow);
-	//parser.RegisterFn("sin", sin);
-	//parser.RegisterFn("cos", cos);
-	//parser.RegisterFn("tan", tan);
-
-	//const auto expr = parser.Parse("1 / x");
-	//auto ctx = ExpressionContext();
-	//ctx.set(1.414e0_opm, "x");
-	//
-	//const auto res = expr(ctx);
-
-	//char str[256] = {};
-	//format(res, str, FormatMode::Standard);
-	//std::cout << str << std::endl;
-	
-	//std::cout << "Ln(x)  took   " << Time(ln, 1e0_opm, 1e100_opm).count() << "ms" << std::endl;
-	//std::cout << "Exp(x) took   " << Time(exp, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
-	//std::cout << "Inv(x) took   " << Time(invert, -1e1_opm, 1e1_opm).count() << "ms" << std::endl;
-	
-	return 0;
-
-	//OpmNum num;
-	//std::string ss;
-	//while (ss.length() == 0) std::getline(std::cin, ss);
-
-	//num = parse(ss.c_str());
-
-	//OpmNum s, c, t;
-	//trig(num, s, c, t);
-
-	//char sss[128];
-
-	//memset(sss, 0, 128);
-	//format(s, sss, FormatMode::Standard);
-	//std::cout << sss << std::endl;
-
-	//memset(sss, 0, 128);
-	//format(c, sss, FormatMode::Standard);
-	//std::cout << sss << std::endl;
-
-	//memset(sss, 0, 128);
-	//format(t, sss, FormatMode::Standard);
-	//std::cout << sss << std::endl;
-
+	//TimeAll();
 	//return 0;
-	OpmStack<10> stack;
-	while (true)
+
+	if (argc > 1)
 	{
-		std::string ns;
-		std::cin >> ns;
-		
-		for (int i = 0; i < 30; i++) std::cout << std::endl;
-
-		bool didOp = false;
-		for(const auto& [op, opFn] : cfnMap)
-		{
-			if (op == ns)
-			{
-				didOp = true;
-				opFn(stack);
-				break;
-			}
-		}
-		if (!didOp)
-		{
-			auto n = parse(ns.c_str());
-			stack.Push(n);
-		}
-		
-		char buf[256];
-
-		for (int i = 0; i < stack.StackSize(); i++) 
-		{
-			memset(buf, 0, 256);
-			format(stack[i], buf, FormatMode::Standard);
-			std::cout << buf << std::endl;
-		}
+		bool exit;
+		const auto res = TestPrecision(argc, argv, exit);
+		if (exit) return res;
 	}
+
+	NExpressionContext ctx { getHistoryRef };
+	ctx.set(OpmComplex(0, 1), "i");
+	ctx.set(Constants::pi, "pi");
+	
+	std::string cmd;
+	InputOption opt;
+	opt.on_enter = [&]
+	{
+		bool de = false;
+		bool se = false;
+		std::string inp = cmd;
+		if (cmd.substr(0, 3) == "/d ")
+		{
+			se = de = true;
+			inp = cmd.substr(3);
+		}
+		if (cmd.substr(0, 3) == "/s ")
+		{
+			se = true;
+			inp = cmd.substr(3);
+		}
+		auto errs = NErrorCollection{};
+		auto expr = Expression::parse(errs, ctx, inp);
+		if (de && errs.empty())
+		{
+			NDerivative d;
+			expr = Expression::rewrite(expr, ctx, d);
+		}
+		if (se && errs.empty()) 
+		{
+			NSimplify s;
+			expr = Expression::rewrite(expr, ctx, s);
+		}
+
+		auto ce = Expression::compile(errs, expr);
+		if (!errs.empty())
+		{
+			s_history.push_back({ cmd, errs, NExpression{}, wrap(Constants::nan) });
+		}
+		else if (expr.type == NExpressionType::FunctionDefinition)
+		{
+			std::string fnName = expr.fnData.front();
+
+			ctx.set(FunctionImplementation{ expr, ce, std::vector<std::string> {expr.fnData.begin() + 1, expr.fnData.end()} }, FunctionDefinition{ fnName, static_cast<uint32_t>(expr.fnData.size() - 1) });
+			s_history.push_back({ cmd, errs, expr, OpmValue {} });
+		}
+		else if (expr.type == NExpressionType::VariableAssignment)
+		{
+			auto res = ce.exec(errs, ctx);
+			ctx.set(res, expr.varName);
+			s_history.push_back({ cmd, errs, expr, res });
+		}
+		else
+		{
+			auto res = ce.exec(errs, ctx);
+			s_history.push_back({ cmd, errs, expr, res });
+		}
+
+		cmd.clear();
+	};
+
+	auto inp = Input(&cmd, "Enter command", opt);
+
+	auto component = Container::Vertical({
+		inp
+	});
+
+	auto renderer = Renderer(inp, [&] {
+		Element elem = text(" ") | inverted;
+		if (!cmd.empty()) elem = inp->Render();
+
+		return vbox({
+					renderStack(),
+					filler(),
+					hbox(text("> ") | color(Color::GrayDark), elem)
+			});
+		}
+	);
+
+	auto screen = ScreenInteractive::Fullscreen();
+	screen.Loop(renderer);
+
+	return 0;
 }
+
+
+//int main(int argc, char** argv)
+//{
+//	if (argc > 1)
+//	{
+//		bool exit;
+//		const auto res = TestPrecision(argc, argv, exit);
+//		if (exit) return res;
+//	}
+//	Term::Terminal term(true);
+//	std::string scr;
+//	std::string cl;
+//	scr.reserve(16 * 1024);
+//	cl.reserve(16 * 1024);
+//
+//	NExpressionContext ctx;
+//	ctx.set(OpmComplex(0, 1), "i");
+//	ctx.set(Constants::pi, "pi");
+//
+//	scr.append(Term::clear_screen());
+//	scr.append(Term::move_cursor(0, 0));
+//
+//	while (true)
+//	{
+//		scr.append(Term::cursor_off());
+//		scr.append(Term::color(Term::fg::gray));
+//		scr.append("> ");
+//		scr.append(Term::color(Term::fg::white));
+//		scr.append(Term::cursor_on());
+//		std::cout << scr << std::flush;
+//
+//		std::getline(std::cin, cl);
+//
+//		auto expr = Expression::parse(cl);
+//		auto ce = Expression::compile(expr);
+//		auto res = ce.exec(ctx);
+//
+//		scr.append(cl);
+//		cl.clear();
+//		//scr.append("\n");
+//		scr.append(Term::cursor_off());
+//		scr.append(Term::color(Term::fg::gray));
+//		scr.append(" -> ");
+//		char s[256] = {};
+//		format(res, s, FormatMode::Standard);
+//		scr.append(s);
+//		scr.append("\n\n");
+//		scr.append(Term::cursor_on());
+//		std::cout << scr << std::flush;
+//
+//		s_stack.Push(res);
+//	}
+//	
+//	return 0;
+//}

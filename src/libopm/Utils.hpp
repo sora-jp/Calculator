@@ -145,3 +145,15 @@ inline void PsDiv(OpmNum& acc, const OpmNum* table, uint8_t* coeffs)
 		coeffs[i] = count;
 	}
 }
+
+inline OpmNum PsMul(const OpmNum* table, const uint8_t* coeffs)
+{
+	OpmNum o;
+
+	for (int i = DIGITCOUNT - 1; i >= 0; i--)
+	{
+		o = o + table[i] * OpmNum(coeffs[i]);
+	}
+
+	return o;
+}

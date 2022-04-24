@@ -14,6 +14,7 @@ const uint32_t& OpmNum::operator[](size_t idx) const
 
 OpmNum operator>>(const OpmNum& a, int amt)
 {
+    if (is_nan(a) || is_inf(a)) return a;
     if (amt <= 0) return a;
 
     OpmNum out(a);
@@ -48,6 +49,7 @@ OpmNum operator>>(const OpmNum& a, int amt)
 
 OpmNum operator<<(const OpmNum& a, int amt)
 {
+    if (is_nan(a) || is_inf(a)) return a;
     if (amt <= 0) return a;
 
     OpmNum out(a);
@@ -81,25 +83,29 @@ OpmNum operator<<(const OpmNum& a, int amt)
 
 OpmNum& operator>>=(OpmNum& a, int amt)
 {
+    if (is_nan(a) || is_inf(a)) return a;
     a = a >> amt;
     return a;
 }
 
 OpmNum& operator<<=(OpmNum& a, int amt)
 {
+    if (is_nan(a) || is_inf(a)) return a;
     a = a << amt;
     return a;
 }
 
 OpmNum abs(const OpmNum& a)
 {
-	auto o = a;
+    if (is_nan(a)) return a;
+    auto o = a;
 	o.isNegative = false;
 	return o;
 }
 
 OpmNum& OpmNum::roundToNearest()
 {
+    if (is_nan(*this) || is_inf(*this)) return *this;
     if ((this->groups[GROUPS - 1] & 0xf0000000) >= 0x50000000) 
     {
         if (PartialAddD(*this, 0x1, GROUPS - 2)) 
@@ -117,6 +123,7 @@ OpmNum& OpmNum::roundToNearest()
 OpmNum& OpmNum::normalize()
 {
     //if (groups[0] & 0x10000000) return *this;
+    if (is_nan(*this) || is_inf(*this)) return *this;
 
     bool zero = true;
 	for (auto g : groups) zero &= g == 0;

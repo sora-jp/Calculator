@@ -11,7 +11,7 @@ int fmtlen(const OpmNum& num)
 inline int getCutoffIdx(const OpmNum& num)
 {
 	//return DIGITCOUNT;
-	for (int i = DIGITCOUNT - 1; i >= 0; i--)
+	for (int i = DIGITCOUNT - 9; i >= 0; i--)
 	{
 		if (DIGIT(num, i) != 0) return i + 1;
 	}
@@ -20,6 +20,23 @@ inline int getCutoffIdx(const OpmNum& num)
 
 int format(const OpmNum& num, char* buffer, FormatMode mode)
 {
+	if (is_nan(num))
+	{
+		strncpy(buffer, "NaN", 3);
+		return 4;
+	}
+
+	if (is_inf(num))
+	{
+		if (num.isNegative)
+		{
+			buffer[0] = '-';
+			buffer++;
+		}
+		strncpy(buffer, "Infinity", sizeof("Infinity"));
+		return sizeof("Infinity") + (num.isNegative ? 1 : 0) - 1;
+	}
+
 	if (mode == FormatMode::Standard)
 	{
 		if (num.exponent > FIXED_MAX_EXP || num.exponent < FIXED_MIN_EXP) mode = FormatMode::Scientific;
@@ -50,30 +67,29 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 				}
 			}
 
-			return 0;
+			return strlen(buffer) + (num.isNegative ? 1 : 0);
 		}
 	}
 	
-	if (mode == FormatMode::Scientific)
+	if (mode == FormatMode::Scientific || mode == FormatMode::DebugRaw)
 	{
 		if (num.isNegative)
 		{
 			buffer[0] = '-';
+			buffer++;
 		}
 		else
 		{
-			buffer[0] = '+';
+			//buffer[0] = '+';
 		}
-		buffer++;
 		
 		buffer[0] = DIGIT(num, 0) + '0';
 		buffer[1] = '.';
 
 		int len = getCutoffIdx(num);
-		if (len == 0)
+		if (len <= 1)
 		{
-			len = -1;
-			buffer[1] = ' ';
+			len = 0;
 		}
 		
 		for (int i = 1; i <= len; i++)
@@ -81,15 +97,30 @@ int format(const OpmNum& num, char* buffer, FormatMode mode)
 			buffer[i + 1] = DIGIT(num, i) + '0';
 		}
 
-		buffer[len + 1] = ' ';
-		buffer[len + 2] = '*';
-		buffer[len + 3] = ' ';
-		buffer[len + 4] = '1';
-		buffer[len + 5] = '0';
-		buffer[len + 6] = '^';
-		sprintf(&buffer[len + 7], "%d", num.exponent);
+		if (mode == FormatMode::Scientific) 
+		{
+			buffer[len + 1] = ' ';
+			buffer[len + 2] = '*';
+			buffer[len + 3] = ' ';
+			buffer[len + 4] = '1';
+			buffer[len + 5] = '0';
+			buffer[len + 6] = '^';
+			return sprintf(&buffer[len + 7], "%d", num.exponent) + len + 7 + (num.isNegative ? 1 : 0);
+		}
+		else
+		{
+			buffer[len + 1] = 'e';
+			return sprintf(&buffer[len + 2], "%d", num.exponent) + len + 2 + (num.isNegative ? 1 : 0);
+		}
 		return 0;
 	}
 
 	return -1;
+}
+
+std::string OpmNum::debug_fmt() const
+{
+	char buf[256] = {};
+	format(*this, buf, FormatMode::DebugRaw);
+	return std::string(buf);
 }

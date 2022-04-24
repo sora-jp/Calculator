@@ -5,6 +5,10 @@
 
 OpmNum ln(const OpmNum& arg)
 {
+	if (is_nan(arg)) return arg;
+	if (arg.isNegative || is_zero(arg)) return Constants::nan;
+	if (is_inf(arg)) return arg;
+
     OpmNum accumulator = arg;
     accumulator.exponent = 0;
 
@@ -18,9 +22,8 @@ OpmNum ln(const OpmNum& arg)
 		if (isOne) return Constants::ln10 * OpmNum(arg.exponent);
 	}
 
-	uint8_t counts[GROUPS * 8];
-	memset(counts, 0, GROUPS * 8);
-	
+	uint8_t counts[GROUPS * 8] = {};
+
 	OpmNum tmp;
 	for (uint32_t i = 0; i < GROUPS * 8; i++)
 	{
@@ -29,7 +32,7 @@ OpmNum ln(const OpmNum& arg)
 		do
 		{
 			tmp = accumulator;
-            tmp.exponent -= i;
+            tmp.exponent -= static_cast<int32_t>(i);
 
 			const OpmNum t = accumulator + tmp;
             if (t.exponent > 0) break;
@@ -57,8 +60,8 @@ OpmNum ln(const OpmNum& arg)
 			almost = almost + Tables::lnTable[i];
 		}
     }
-	
-	return Constants::ln10 + Constants::ln10 * OpmNum(arg.exponent) - almost;
+	auto o = OpmNum(arg.exponent);
+	return Constants::ln10 + Constants::ln10 * o - almost;
 }
 
 OpmNum log10(const OpmNum& arg)

@@ -1,38 +1,69 @@
 #include "Timing.h"
 #include "OpmRand.hpp"
+#include "rt_poly/OpmValue.h"
 
-long double Time(std::function<OpmNum(const OpmNum&)> fn, const OpmNum& min, const OpmNum& max, uint32_t iters)
+struct FnData1
 {
-	long double d = 0;
-	random_distribution r(min, max);
-	for (uint32_t i = 0; i < iters; i++)
-	{
-		const auto num = r.rand();
-		auto t1 = std::chrono::high_resolution_clock::now();
-		volatile auto res = fn(num);
-		auto t2 = std::chrono::high_resolution_clock::now();
-		d += static_cast<long double>((t2 - t1).count());
-	}
+	std::string name;
+	OpmNum(*fnPtr)(const OpmNum&);
+	OpmNum min, max;
+};
 
-	return d / (1000000.0l * iters);
+struct FnData2
+{
+	std::string name;
+	OpmNum(*fnPtr)(const OpmNum&, const OpmNum&);
+	OpmNum min, max;
+};
+
+const std::vector<FnData1> fnMap1 =
+{
+	{"ln",  &ln, 0e0_opm, 1e2_opm},
+	{"exp", &exp, -1e2_opm, 1e2_opm},
+	{"sin", &sin, -7e0_opm, 7e0_opm},
+	{"cos", &cos, -7e0_opm, 7e0_opm},
+	{"tan", &tan, -1e2_opm, 1e2_opm},
+	{"arctan", &atan, -1e2_opm, 1e2_opm},
+	{"arcsin", &asin, -1e0_opm, 1e0_opm},
+	{"arccos", &acos, -1e0_opm, 1e0_opm},
+	{"1 / x", &invert, 0e0_opm, 1e4_opm}
+};
+
+const std::vector<FnData2> fnMap2 =
+{
+	{"addition", &operator+, 1e0_opm, 1e10_opm},
+	{"subtraction", &operator-, 1e0_opm, 1e10_opm},
+	{"multiplication", &operator*, -1e10_opm, 1e10_opm},
+	{"division", &operator/, -1e10_opm, 1e10_opm},
+	{"pow", &pow, 1e0_opm, 1e10_opm},
+	{"log", &log, 1e0_opm, 1e10_opm},
+};
+
+void PrintData(const std::string& name, const long double time)
+{
+	std::cout << name << " & $" << time << "$ & $" << (1000.0l / time) << "$ \\\\" << std::endl;
 }
 
-long double Time(std::function<OpmNum(const OpmNum&, const OpmNum&)> fn, const OpmNum& min, const OpmNum& max, uint32_t iters)
+void TimeSingle(const FnData1& data)
 {
-	long double d = 0;
-	random_distribution r(min, max);
-	for (uint32_t i = 0; i < iters; i++)
+	auto t = Time(data.fnPtr, data.min, data.max, 10000U);
+	PrintData(data.name, t);
+}
+
+void TimeSingle(const FnData2& data)
+{
+	auto t = Time(data.fnPtr, data.min, data.max, 10000U);
+	PrintData(data.name, t);
+}
+
+void TimeAll()
+{
+	for (const auto& fn : fnMap1)
 	{
-		const auto num1 = r.rand();
-		const auto num2 = r.rand();
-		//print(num1);
-		//print(num2);
-
-		auto t1 = std::chrono::high_resolution_clock::now();
-		volatile auto res = fn(num1, num2);
-		auto t2 = std::chrono::high_resolution_clock::now();
-		d += static_cast<long double>((t2 - t1).count());
+		TimeSingle(fn);
 	}
-
-	return d / (1000000ull * iters);
+	for (const auto& fn : fnMap2)
+	{
+		TimeSingle(fn);
+	}
 }

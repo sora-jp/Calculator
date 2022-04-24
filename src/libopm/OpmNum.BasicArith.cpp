@@ -2,11 +2,15 @@
 #include "Utils.hpp"
 #include "cordic/Tables.hpp"
 
-const uint32_t TC = 0x99999999;
+constexpr uint32_t TC = 0x99999999;
 OpmNum operator+(const OpmNum& a, const OpmNum& b)
 {
     if (a.exponent < b.exponent) return b + a;
 
+    if (is_nan(a) || is_nan(b)) return Constants::nan;
+    if (is_inf(a) && is_inf(b) && (a.isNegative ^ b.isNegative)) return Constants::nan;
+    if (is_inf(a)) return a;
+    if (is_inf(b)) return b;
 	if (is_zero(b)) return a;
     if (is_zero(a)) return b;
 
@@ -45,6 +49,8 @@ OpmNum operator+(const OpmNum& a, const OpmNum& b)
 
 OpmNum operator-(const OpmNum& a)
 {
+    if (is_nan(a)) return a;
+
     OpmNum out(a);
     out.isNegative = !out.isNegative;
     return out;
@@ -55,13 +61,14 @@ OpmNum operator-(const OpmNum& a, const OpmNum& b)
     return a + (-b);
 }
 
-inline void MulPass(OpmNum& out, int64_t* partialS)
-{
-
-}
-
 OpmNum operator*(const OpmNum& a, const OpmNum& b)
 {
+    if (is_nan(a) || is_nan(b)) return Constants::nan;
+    if (is_inf(a) || is_inf(b)) return b.isNegative ^ a.isNegative ? Constants::ninf : Constants::inf;
+
+    if (is_zero(a)) return a;
+    if (is_zero(b)) return b;
+
     OpmNum out;
     out.exponent   = a.exponent   + b.exponent;
     out.isNegative = a.isNegative ^ b.isNegative;
@@ -120,6 +127,9 @@ const OpmNum divPoly2[3] =
 
 OpmNum invert(const OpmNum& num)
 {
+    if (is_zero(num)) return Constants::nan;
+    if (is_inf(num)) return 0e0_opm;
+
 	const int32_t nexp = -num.exponent;
 
 	OpmNum o2 = num;
@@ -128,7 +138,7 @@ OpmNum invert(const OpmNum& num)
 	
     OpmNum out = horner(o2, divPoly);
     
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 9; i++) {
         out = (out + out * (Constants::one - (out * o2)));
     }
 
@@ -137,18 +147,22 @@ OpmNum invert(const OpmNum& num)
     return out;
 }
 
+//TODO: This function really doesn't work. wierd error at x=7, about 10^51 ulp
+//This is probably due to the polynomial approximation being very small at x=7 (about 2.5e-2)
 OpmNum invert3(const OpmNum& num)
 {
+    return invert(num); // TODO: FIX THIS
+
 	const int32_t nexp = -num.exponent;
 
 	OpmNum o2 = num;
 	o2.exponent = 0;
 	o2.isNegative = false;
 	
-    OpmNum out = horner_c(o2, divPoly2);
+    OpmNum out = divPoly2[0] + o2 * (divPoly2[1] + o2 * divPoly2[2]);
     
     for (int i = 0; i < 4; i++) {
-        OpmNum e = 1e0_opm - o2 * out;
+        OpmNum e = Constants::one - o2 * out;
         OpmNum y = out * e;
         out = out + y + y * e;
     }

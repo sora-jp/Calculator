@@ -15,9 +15,10 @@ public:
     int32_t exponent;
     uint32_t groups[GROUPS] {};
     
-    OpmNum() : isNegative(false), isNan(false), isInfinity(false), exponent(0) {}
-    OpmNum(const OpmNum& copy) = default;
-    explicit OpmNum(int32_t num);
+    constexpr OpmNum() : isNegative(false), isNan(false), isInfinity(false), exponent(0) {}
+	constexpr OpmNum(bool negative, bool nan, bool inf) : isNegative(negative), isNan(nan), isInfinity(inf), exponent(0) {}
+    constexpr OpmNum(const OpmNum& copy) = default;
+    OpmNum(int32_t num);
 
 	template<uint32_t... gs>
 	static OpmNum Constant(const bool n, const int32_t e)
@@ -36,7 +37,7 @@ public:
         isNan = false;
         isInfinity = false;
         exponent = 0;
-        for (unsigned int& group : groups) group = 0;
+        for (auto& group : groups) group = 0;
     }
 
 	uint32_t& operator[](size_t idx);
@@ -44,6 +45,7 @@ public:
 	
     OpmNum& roundToNearest();
     OpmNum& normalize();
+	std::string debug_fmt() const;
 };
 
 template<uint32_t n, uint32_t t0> constexpr void copy(OpmNum& o)
@@ -59,14 +61,16 @@ template<uint32_t n, uint32_t t0, uint32_t t1, uint32_t... t> constexpr void cop
 
 inline OpmNum::OpmNum(int32_t num): isNegative(false), isNan(false), isInfinity(false), exponent(0)
 {
-	isNegative = num < 0;
-
-	if (num < 0) num = -num;
+	if (num < 0) 
+	{
+		isNegative = true;
+		num = -num;
+	}
 
 	uint8_t digits[10]{};
 
 	auto cur = 0;
-	do
+	while (num >= 10)
 	{
 		const uint8_t r = num % 10;
 		num = num / 10;
@@ -76,7 +80,6 @@ inline OpmNum::OpmNum(int32_t num): isNegative(false), isNan(false), isInfinity(
 		exponent++;
 		cur++;
 	}
-	while (num > 10);
 
 	digits[cur] = static_cast<uint8_t>(num);
 
@@ -95,7 +98,12 @@ bool operator<(const OpmNum& a, const OpmNum& b);
 bool operator>(const OpmNum& a, const OpmNum& b);
 bool operator<=(const OpmNum& a, const OpmNum& b);
 bool operator>=(const OpmNum& a, const OpmNum& b);
+
 bool is_zero(const OpmNum& a);
+bool is_nan(const OpmNum& a);
+bool is_pinf(const OpmNum& a);
+bool is_ninf(const OpmNum& a);
+bool is_inf(const OpmNum& a);
 
 OpmNum operator>>(const OpmNum& a, int amt);
 OpmNum operator<<(const OpmNum& a, int amt);
@@ -122,12 +130,24 @@ OpmNum exp(const OpmNum& arg);
 OpmNum exp2(const OpmNum& arg);
 OpmNum exp10(const OpmNum& arg);
 OpmNum pow(const OpmNum& x, const OpmNum& y);
+OpmNum sqrt(const OpmNum& x);
 
-OpmNum tan(const OpmNum& arg);
-OpmNum cot(const OpmNum& arg);
 OpmNum sin(const OpmNum& arg);
 OpmNum cos(const OpmNum& arg);
+OpmNum tan(const OpmNum& arg);
+OpmNum cot(const OpmNum& arg);
 void trig(const OpmNum& arg, OpmNum& sin, OpmNum& cos, OpmNum& tan);
+
+OpmNum asin(const OpmNum& arg);
+OpmNum acos(const OpmNum& arg);
+OpmNum atan(const OpmNum& arg);
+OpmNum atan2(const OpmNum& x, const OpmNum& y);
+
+OpmNum sinh(const OpmNum& arg);
+OpmNum cosh(const OpmNum& arg);
+OpmNum tanh(const OpmNum& arg);
+
+OpmNum gamma(const OpmNum& x);
 
 OpmNum horner(const OpmNum& x, const OpmNum* coeffs, size_t size);
 
@@ -155,19 +175,19 @@ template<int32_t A>
 struct equal<A, A> : std::true_type{};
 
 template<size_t Size, int32_t Index>
-inline OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::false_type)
+OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::false_type)
 {
 	return coeffs[Index];
 }
 
 template<size_t Size, int32_t Index>
-inline OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::true_type)
+OpmNum horner_impl(const OpmNum& x, const OpmNum(&coeffs)[Size], std::true_type)
 {
 	return coeffs[Index] + x * horner_impl<Size, Index + 1>(x, coeffs, equal<Index + 2, Size> {});
 }
 
 template<size_t Size>
-inline OpmNum horner_c(const OpmNum& x, const OpmNum(&coeffs)[Size])
+OpmNum horner_c(const OpmNum& x, const OpmNum(&coeffs)[Size])
 {
 	return horner_impl<Size, 0>(x, coeffs, std::true_type {});
 }

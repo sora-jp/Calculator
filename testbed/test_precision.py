@@ -9,7 +9,7 @@ import multiprocessing
 import itertools
 import tqdm
 
-proc = subprocess.Popen(["../bin/Release/Calculator.exe", "--info"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+proc = subprocess.Popen(["../bin/calc/Release/Calculator.exe", "--info"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
 GROUP_SIZE = 8
 GROUPS = int(proc.communicate()[0])
@@ -18,10 +18,8 @@ ULP = mpmath.mpf(10) ** mpmath.mpf(-DIGITS + 9)
 
 mpmath.mp.dps = DIGITS
 
-
 def gen_single(start: mpmath.mpf, norm_fac: mpmath.mpf, x: int):
-    return start + norm_fac * x #+ norm_fac * mpmath.rand()
-
+    return start + norm_fac * x + norm_fac * mpmath.rand()
 
 def calc_error(actual, expected):
     if expected == 0:
@@ -33,8 +31,8 @@ def calc_error(actual, expected):
 
 def test_thread(args):
     (fn_name, nums) = args
-    proc_c = subprocess.Popen(["../bin/Release/Calculator.exe", "--test"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    proc_input = bytes(F"{fn_name}\n{len(nums)}\n" + "\n".join([str(s) for s in nums]), "ascii")
+    proc_c = subprocess.Popen(["../bin/calc/Release/Calculator.exe", "--test"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    proc_input = bytes(F"{fn_name}\r\n{len(nums)}\r\n" + "\r\n".join([str(s) for s in nums]), "ascii")
     o = proc_c.communicate(proc_input)[0]
     o = o.splitlines()
 
@@ -47,7 +45,7 @@ def test_thread(args):
     return data
 
 
-def test(fn_name: str, fn, count: int, min: mpmath.mpf, max: mpmath.mpf):
+def test(fn_name: str, fn, pltdata, count: int, min: mpmath.mpf, max: mpmath.mpf):
     t_start = time.time()
     norm_fac = (max - min) / mpmath.mpf(count)
 
@@ -85,9 +83,10 @@ def test(fn_name: str, fn, count: int, min: mpmath.mpf, max: mpmath.mpf):
         for i in tqdm.trange(count, desc="Aggregating results"):
             e = calc_error(calcres[i], ys[i])
             errs.append(e)
-            if e.__abs__() > max_err[0]:
+            e = e.__abs__()
+            if e > max_err[0]:
                 max_err = (e, xs[i], ys[i], calcres[i][0])
-            elif e.__abs__() < min_err[0]:
+            elif e < min_err[0]:
                 min_err = (e, xs[i], ys[i], calcres[i][0])
             mean = mean + e / count
             sqrmean = sqrmean + e * e / count
@@ -112,15 +111,10 @@ def test(fn_name: str, fn, count: int, min: mpmath.mpf, max: mpmath.mpf):
         t_diff = time.time() - t_start
         print(F"Test completed in {t_diff} seconds")
 
-        plt.ioff()
+        plt.subplot(pltdata)
+        plt.title(fn_name)
         plt.plot(xs, errs)
-        plt.plot(xs, ys)
-        plt.show()
-
-
-def lnn(x):
-    return mpmath.exp(x)
-
-
-if __name__ == "__main__":
-    test("exp", lnn, 320, mpmath.mpf(0), mpmath.mpf(1))
+        #plt.plot(xs, ys)
+        #plt.plot(xs, np.array([mpmath.mpmathify(x[0]) for x in calcres]))
+        #plt.show()
+        #plt.imsave(fn_name + ".png")
