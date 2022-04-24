@@ -39,16 +39,21 @@ const std::vector<FnData2> fnMap2 =
 	{"log", &log, 1e0_opm, 1e10_opm},
 };
 
+void PrintData(const std::string& name, const long double time)
+{
+	std::cout << name << " & $" << time << "$ & $" << (1000.0l / time) << "$ \\\\" << std::endl;
+}
+
 void TimeSingle(const FnData1& data)
 {
 	auto t = Time(data.fnPtr, data.min, data.max, 10000U);
-	std::cout << data.name << " took " << t << "ms / invocation, " << (1000.0l / t) << " invocations / second" << std::endl;
+	PrintData(data.name, t);
 }
 
 void TimeSingle(const FnData2& data)
 {
 	auto t = Time(data.fnPtr, data.min, data.max, 10000U);
-	std::cout << data.name << " took " << t << "ms / invocation, " << (1000.0l / t) << " invocations / second" << std::endl;
+	PrintData(data.name, t);
 }
 
 void TimeAll()
@@ -57,7 +62,6 @@ void TimeAll()
 	{
 		TimeSingle(fn);
 	}
-	std::cout << std::endl;
 	for (const auto& fn : fnMap2)
 	{
 		TimeSingle(fn);
